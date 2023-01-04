@@ -20,7 +20,7 @@ connection = http.client.HTTPSConnection(hawqsAPIUrl)
 
 currentJobID = None
 
-console = Console(color_system='truecolor')
+console = Console(color_system='auto')
 
 table = Table(box=None)
 tableMeta = {
@@ -164,7 +164,7 @@ def editApiUrl():
     global hawqsAPIUrl 
     console.print(f" [green]The current HAWQS API URL is:[/] {hawqsAPIUrl}")
     console.print(f" [green]Enter a new URL, [white]reset[/] to reset URL to the default, or [white]exit[/] to cancel")
-    newUrl = console.input(" >: ")
+    newUrl = Prompt.ask(" >")
     if newUrl.lower() == "exit":
         console.print(f" [yellow]Edit URL cancelled")
     elif newUrl.lower() == "reset":
@@ -179,7 +179,7 @@ def editApiKey():
     global hawqsAPIKey
     console.print(f" The current HAWQS API Key is {hawqsAPIKey}")
     console.print(f" Enter a new Key, [white]reset[/] to reset to the default, or [white]exit[/] to cancel")
-    newKey = console.input(" >: ")
+    newKey = Prompt.ask(" >")
     if newKey.lower() == "exit":
         console.print(f" [yellow]Edit Key cancelled")
     elif newKey.lower() == "reset":
@@ -195,22 +195,18 @@ def exitApplication():
 
 if __name__ == "__main__":
     console.print("\n\n\n\n\n")
-    
-#     headerPanel = Panel(""":::    :::     :::     :::       :::  ::::::::   :::::::: 
-# :+:    :+:   :+: :+:   :+:       :+: :+:    :+: :+:    :+:
-# +:+    +:+  +:+   +:+  +:+       +:+ +:+    +:+ +:+      /
-# +#++:++#++ +#++:++#++: +#+  +:+  +#+ +#+    +:+ +#++:++#++
-# +#+    +#+ +#+     +#+ +#+ +#+#+ +#+ +#+  # +#+        +#+
-# #+#    #+# #+#     #+#  #+#+# #+#+#  #+#   +#+  #+#    #+#
-# ###    ### ###     ###   ###   ###    ###### ### ######## """)
-#     console.print(headerPanel, justify="center", style="red")
-    console.print(":::    :::     :::     :::       :::  ::::::::   :::::::: ", style="#00ffff")
-    console.print(":+:    :+:   :+: :+:   :+:       :+: :+:    :+: :+:    :+:", style="#00ffd7")
-    console.print("+:+    +:+  +:+   +:+  +:+       +:+ +:+    +:+ +:+       ", style="#00ffaf")
-    console.print("+#++:++#++ +#++:++#++: +#+  +:+  +#+ +#+    +:+ +#++:++#++", style="#00ff87")
-    console.print("+#+    +#+ +#+     +#+ +#+ +#+#+ +#+ +#+  # +#+        +#+", style="#00ff5f")
-    console.print("#+#    #+# #+#     #+#  #+#+# #+#+#  #+#   +#+  #+#    #+#", style="#00ff00")
-    console.print("###    ### ###     ###   ###   ###    ###### ### ######## ", style="#00d75f")
+
+    #  _____ _____ _____   _ _____ _____ _ _ _ _____ _____    _____ _____ _____ 
+    # |  |  |     |   __| / |  |  |  _  | | | |     |   __|  |  _  |  _  |     |
+    # |     | | | |__   |/ /|     |     | | | |  |  |__   |  |     |   __|-   -|
+    # |__|__|_|_|_|_____|_/ |__|__|__|__|_____|__  _|_____|  |__|__|__|  |_____|
+    #                                            |__|                           
+    asciiString = f"[white] _____ _____ _____   _ _____ _____ _ _ _ _____ _____    _____ _____ _____ \n" + \
+                  f"[bright_yellow]|  |  |     |   __| / |  |  |  _  | | | |     |   __|  |  _  |  _  |     |\n" + \
+                  f"[bright_cyan]|     | | | |__   |/ /|     |     | | | |  |  |__   |  |     |   __|-   -|\n" + \
+                  f"[bright_blue]|__|__|_|_|_|_____|_/ |__|__|__|__|_____|__  _|_____|  |__|__|__|  |_____|\n" + \
+                  f"[bright_magenta]                |__|                           "
+    console.print(Panel.fit(asciiString), justify='center', style='red')
 
     console.print("[italic red]HAWQS[/italic red] Web API test application", justify="center")
     console.print()
