@@ -5,46 +5,60 @@ import os
 from dotenv import load_dotenv
 
 from rich.console import Console
+from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt
+from rich.json import JSON
 
 load_dotenv()
 DEFAULT_API_URL = os.getenv('DEFAULT_API_URL')
 hawqsAPIUrl = DEFAULT_API_URL
 DEFAULT_API_KEY = os.getenv('DEFAULT_API_KEY')
-hawqsAPIKey = DEFAULT_API_KEY
+hawqsAPIKey = os.getenv('DEFAULT_API_KEY')
 
 connection = http.client.HTTPSConnection(hawqsAPIUrl)
 
 currentJobID = None
 
-console = Console()
-table = Table(box=None)
+console = Console(color_system='truecolor')
 
-table.add_column("", justify='center', style="yellow", width=3)
-table.add_column("", justify='center', style="blue")
-table.add_column("", style="magenta")
-table.add_column("", style="green")
-table.add_row("<1>",  "Check API Status", "[GET]", "test/clientget")
-table.add_row("<2>", "Get Input Definitions", "[GET]", "projects/input-definitions")
-table.add_row("<3>", "Submit a test Project", "[POST]", "projects/submit")
-table.add_row("<4>", "Check Project Execution Status", "[GET]", "projects/:jobId")
-table.add_row("<5>", "Get Completed Project data", "[GET]", "projects/data")
-table.add_row("<6>", "Edit API URL")
-table.add_row("<7>", "Edit API Key")
-table.add_row("<8>", "[red]Exit Application[/]")
+table = Table(box=None)
+tableMeta = {
+    'columns': [
+        { 'header': "", 'justify': "center", 'style': "yellow", 'width': 3 },
+        { 'header': "", 'justify': "center", 'style': "blue", 'width': None },
+        { 'header': "", 'justify': None, 'style': "magenta", 'width': None },
+        { 'header': "", 'justify': None, 'style': "green", 'width': None },
+    ],
+    'rows': [
+        { 'selector': "1", 'action': "Check HAWQS API Status", 'type': "GET", 'endpoint': "test/clientget" },
+        { 'selector': "2", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "projects/input-definitions" },
+        { 'selector': "3", 'action': "Submit a test Project", 'type': "POST", 'endpoint': "projects/submit" },
+        { 'selector': "4", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "projects/:jobId" },
+        { 'selector': "5", 'action': "Get Completed Project data", 'type': "GET", 'endpoint': "projects/data/:jobId" },
+        { 'selector': "6", 'action': "Edit API URL", 'type': None, 'endpoint': None },
+        { 'selector': "7", 'action': "Edit API Key", 'type': None, 'endpoint': None },
+        { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
+    ]
+}
+menuChoices = [row['selector'] for row in tableMeta['rows']]
+
+for column in tableMeta['columns']:
+    table.add_column(column['header'], justify=column['justify'], style=column['style'], width=column['width'])
+for row in tableMeta['rows']:
+    if row['type']:
+        table.add_row(f"<{row['selector']}>", row['action'], f"[{row['type']}]", row['endpoint'])
+    else:
+        table.add_row(f"<{row['selector']}>", row['action'])
 
 def showMenu():
-    console.print()
-    console.print(f" HAWQS API URL: {hawqsAPIUrl}")
-    console.print(f" HAWQS API Key: {hawqsAPIKey}")
+    console.print(Panel(f"HAWQS API URL: [cyan]{hawqsAPIUrl}[/] \nHAWQS API Key: [cyan]{hawqsAPIKey}[/]"))
 
     if currentJobID:
         console.print(f"[green italic]Current Job ID:[/] [red]{currentJobID}[/]", justify="center")
-        console.print()
     
     console.print(table)
-    executeChoice(Prompt.ask(" Make Selection", choices=["1", "2", "3", "4", "5", "6", "7", "8"], show_choices=False))
+    executeChoice(Prompt.ask(" Make Selection >", choices=menuChoices, show_choices=False))
 
 def executeChoice(choice):
     console.print()
@@ -75,7 +89,7 @@ def executeChoice(choice):
     if choice == "7":
         console.print("[green] Edit Key")
         editApiKey()
-    if choice == "8":
+    if choice == "e":
         console.print("[red] Exit Application")
         exitApplication()
 
@@ -84,8 +98,8 @@ def getAPIStatus():
     with console.status("[bold green] Processing request...[/]") as _:
         connection.request('GET', '/test/clientget', None, headers)
         response = connection.getresponse()
-        console.print("[green] API Status[/] " + response.read().decode())
-        console.print(f"[green] Request Status:[/] {response.status}")
+        console.print(Panel(JSON(response.read().decode())))
+        console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
     showMenu()
 
@@ -94,8 +108,8 @@ def getInputDefinitions():
     with console.status("[bold green] Processing request...[/]") as _:
         connection.request('GET', '/projects/input-definitions', None, headers)
         response = connection.getresponse()
-        console.print("[green] Input Definitions[/] " + response.read().decode())
-        console.print(f"[green] Request Status:[/] {response.status}")
+        console.print(Panel(JSON(response.read().decode())))
+        console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
     showMenu()
 
@@ -149,7 +163,8 @@ def getProjectData():
 def editApiUrl():
     global hawqsAPIUrl 
     console.print(f" [green]The current HAWQS API URL is:[/] {hawqsAPIUrl}")
-    newUrl = console.input(f" [green]Enter a new URL, [white]reset[/] to reset URL to the default, or [white]exit[/] to cancel: ")
+    console.print(f" [green]Enter a new URL, [white]reset[/] to reset URL to the default, or [white]exit[/] to cancel")
+    newUrl = console.input(" >: ")
     if newUrl.lower() == "exit":
         console.print(f" [yellow]Edit URL cancelled")
     elif newUrl.lower() == "reset":
@@ -163,7 +178,8 @@ def editApiUrl():
 def editApiKey():
     global hawqsAPIKey
     console.print(f" The current HAWQS API Key is {hawqsAPIKey}")
-    newKey = console.input(f" Enter a new Key, [white]reset[/] to reset to the default, or [white]exit[/] to cancel: ")
+    console.print(f" Enter a new Key, [white]reset[/] to reset to the default, or [white]exit[/] to cancel")
+    newKey = console.input(" >: ")
     if newKey.lower() == "exit":
         console.print(f" [yellow]Edit Key cancelled")
     elif newKey.lower() == "reset":
@@ -175,9 +191,27 @@ def editApiKey():
     showMenu()
 
 def exitApplication():
-    console.print("exiting [italic red]HAWQS[/italic red] API test application", justify="center")
+    console.print("exiting [italic red]HAWQS[/italic red] Web API test application", justify="center")
 
 if __name__ == "__main__":
+    console.print("\n\n\n\n\n")
+    
+#     headerPanel = Panel(""":::    :::     :::     :::       :::  ::::::::   :::::::: 
+# :+:    :+:   :+: :+:   :+:       :+: :+:    :+: :+:    :+:
+# +:+    +:+  +:+   +:+  +:+       +:+ +:+    +:+ +:+      /
+# +#++:++#++ +#++:++#++: +#+  +:+  +#+ +#+    +:+ +#++:++#++
+# +#+    +#+ +#+     +#+ +#+ +#+#+ +#+ +#+  # +#+        +#+
+# #+#    #+# #+#     #+#  #+#+# #+#+#  #+#   +#+  #+#    #+#
+# ###    ### ###     ###   ###   ###    ###### ### ######## """)
+#     console.print(headerPanel, justify="center", style="red")
+    console.print(":::    :::     :::     :::       :::  ::::::::   :::::::: ", style="#00ffff")
+    console.print(":+:    :+:   :+: :+:   :+:       :+: :+:    :+: :+:    :+:", style="#00ffd7")
+    console.print("+:+    +:+  +:+   +:+  +:+       +:+ +:+    +:+ +:+       ", style="#00ffaf")
+    console.print("+#++:++#++ +#++:++#++: +#+  +:+  +#+ +#+    +:+ +#++:++#++", style="#00ff87")
+    console.print("+#+    +#+ +#+     +#+ +#+ +#+#+ +#+ +#+  # +#+        +#+", style="#00ff5f")
+    console.print("#+#    #+# #+#     #+#  #+#+# #+#+#  #+#   +#+  #+#    #+#", style="#00ff00")
+    console.print("###    ### ###     ###   ###   ###    ###### ### ######## ", style="#00d75f")
+
+    console.print("[italic red]HAWQS[/italic red] Web API test application", justify="center")
     console.print()
-    console.print("[italic red]HAWQS[/italic red] API test application", justify="center")
     showMenu()
