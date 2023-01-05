@@ -84,10 +84,10 @@ def executeChoice(choice):
         else:
             showMenu()
     if choice == "6":
-        console.print("[green] Edit URL")
+        console.print("[yellow] Edit URL")
         editApiUrl()
     if choice == "7":
-        console.print("[green] Edit Key")
+        console.print("[yellow] Edit Key")
         editApiKey()
     if choice == "e":
         console.print("[red] Exit Application")
@@ -162,32 +162,36 @@ def getProjectData():
 
 def editApiUrl():
     global hawqsAPIUrl 
-    console.print(f" [green]The current HAWQS API URL is:[/] {hawqsAPIUrl}")
-    console.print(f" [green]Enter a new URL, [white]reset[/] to reset URL to the default, or [white]exit[/] to cancel")
+    console.print(f" [green]The current HAWQS API URL is:[/] [cyan]{hawqsAPIUrl}")
+    console.print(f" [green]Enter a new URL, ([white]r[/])eset to reset to the default, or ([white]e[/])xit to cancel")
     newUrl = Prompt.ask(" >")
-    if newUrl.lower() == "exit":
+    if newUrl.lower() == "exit" or newUrl.lower() == "e":
         console.print(f" [yellow]Edit URL cancelled")
-    elif newUrl.lower() == "reset":
+    elif newUrl.lower() == "reset" or newUrl.lower() == "r":
         hawqsAPIUrl = DEFAULT_API_URL
-        console.print(f' [green]API URL reset to default: [white]{hawqsAPIUrl}')
+        console.print(f' [green]API URL reset to default: [cyan]{hawqsAPIUrl}')
     else:
         hawqsAPIUrl = newUrl
-        console.print(f' [green]API URL updated to: [white]{hawqsAPIUrl}')
+        console.print(f' [green]API URL updated to: [cyan]{hawqsAPIUrl}')
+        
+    console.print()
     showMenu()
 
 def editApiKey():
     global hawqsAPIKey
-    console.print(f" The current HAWQS API Key is {hawqsAPIKey}")
-    console.print(f" Enter a new Key, [white]reset[/] to reset to the default, or [white]exit[/] to cancel")
+    console.print(f" [green]The current HAWQS API Key is:[/] [cyan]{hawqsAPIKey}")
+    console.print(f" [green]Enter a new Key, ([white]r[/])eset to reset to the default, or ([white]e[/])xit to cancel")
     newKey = Prompt.ask(" >")
-    if newKey.lower() == "exit":
+    if newKey.lower() == "exit" or newKey.lower() == "e":
         console.print(f" [yellow]Edit Key cancelled")
-    elif newKey.lower() == "reset":
+    elif newKey.lower() == "reset" or newKey.lower() == "r":
         hawqsAPIKey = DEFAULT_API_KEY
-        console.print(f' [green]API Key reset to default: [white]{hawqsAPIKey}')
+        console.print(f' [green]API Key reset to default: [cyan]{hawqsAPIKey}')
     else:
         hawqsAPIKey = newKey
-        console.print(f' [green]API Key updated to: [white]{hawqsAPIKey}')
+        console.print(f' [green]API Key updated to: [cyan]{hawqsAPIKey}')
+        
+    console.print()
     showMenu()
 
 def exitApplication():
@@ -209,5 +213,4 @@ if __name__ == "__main__":
     console.print(Panel.fit(asciiString), justify='center', style='red')
 
     console.print("[italic red]HAWQS[/italic red] Web API test application", justify="center")
-    console.print()
     showMenu()
