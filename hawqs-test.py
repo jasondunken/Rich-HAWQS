@@ -212,5 +212,5 @@ if __name__ == "__main__":
                   f"[bright_magenta]                |__|                           "
     console.print(Panel.fit(asciiString), justify='center', style='red')
 
-    console.print("[italic red]HAWQS[/italic red] Web API test application", justify="center")
+    console.print("[bright_cyan]HMS[/]/[red]HAWQS[/] Web API test application", justify="center")
     showMenu()
