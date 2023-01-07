@@ -1,6 +1,7 @@
 import http.client
 import json
 import os
+from time import sleep
 
 from dotenv import load_dotenv
 
@@ -39,9 +40,9 @@ def showMenu():
         'rows': [
             { 'selector': "1", 'action': "Check HAWQS API Status", 'type': "GET", 'endpoint': "test/clientget" },
             { 'selector': "2", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "projects/input-definitions" },
-            { 'selector': "3", 'action': "Submit a test Project", 'type': "POST", 'endpoint': "projects/submit" },
+            { 'selector': "3", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "projects/submit" },
             { 'selector': "4", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "projects/:id" },
-            { 'selector': "5", 'action': "Get Completed Project data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
+            { 'selector': "5", 'action': "Get Completed Project Data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
             { 'selector': "6", 'action': "Edit API URL", 'type': None, 'endpoint': None },
             { 'selector': "7", 'action': "Edit API Key", 'type': None, 'endpoint': None },
             { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
@@ -76,13 +77,14 @@ def executeChoice(choice):
             console.print("[green] Fetching Project Status")
             getProjectStatus()
         else:
+            alert("[red] There must be a stored job ID. Submit the test project to create job ID")
             showMenu()
     if choice == "5":
-        # if isProjectCompleted():
-        if True:
+        if isProjectCompleted():
             console.print("[green] Fetch Project Data")
             getProjectData()
         else:
+            alert("[red] Project progress must be 100% complete to get data. Check status again")
             showMenu()
     if choice == "6":
         console.print("[yellow] Edit URL")
@@ -115,10 +117,10 @@ def getInputDefinitions():
         console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
 def submitProject():
-    global currentProject, currentJobID, currentProgress
+    global currentProject, currentJobID, currentStatus
     currentProject = None
     currentJobID = None
-    currentProgress = 0
+    currentStatus = None
 
     inputData = {
         'dataset': 'HUC8',
@@ -160,9 +162,6 @@ def submitProject():
 def isCurrentJob():
     if currentJobID:
         return True
-    
-    console.print(Panel("[red] There must be a stored job ID. Submit the test project to create job ID"), style='red')
-    return False
 
 def getProjectStatus():
     try:
@@ -181,45 +180,20 @@ def getProjectStatus():
         console.print(Panel("some kind of exception occurred", e))
 
 def isProjectCompleted():
-    if currentStatus['status']['progress'] >= 100:
+    if currentStatus and currentStatus['status']['progress'] >= 100:
         return True
-
-    console.print(Panel("[red] Project progress must be 100% complete to get data. Check status again"), style='red')
-    return False
-
-testOutput = [
-    { 
-        'name': 'Project input/output files', 
-        'url': 'https://dev-api.hawqs.tamu.edu/api-files/api-projects/epaDevAccess/70_api-project-epadevaccess-2023-01-06-164844/huc8-07100009.7z', 
-        'format': '7zip'
-    }, 
-    { 
-        'name': 'Metadata for daily averages by month (output.rch)',
-        'url': 'https://dev-api.hawqs.tamu.edu/api-files/api-projects/epaDevAccess/70_api-project-epadevaccess-2023-01-06-164844/output_rch_daily_avg_metadata.csv',
-        'format': 'csv'
-    },
-    {
-        'name': 'Daily averages by month (output.rch)', 
-        'url': 'https://dev-api.hawqs.tamu.edu/api-files/api-projects/epaDevAccess/70_api-project-epadevaccess-2023-01-06-164844/output_rch_daily_avg.csv',
-        'format': 'csv'
-    },
-    {
-        'name': 'Daily averages by month (output.rch)',
-        'url': 'https://dev-api.hawqs.tamu.edu/api-files/api-projects/epaDevAccess/70_api-project-epadevaccess-2023-01-06-164844/output_rch_daily_avg.nc', 
-        'format': 'netcdf'
-    }]
 
 def getProjectData():
     tableMetadata = {
         'columns': [
             { 'header': "", 'justify': "center", 'style': "yellow", 'width': 3 },
-            { 'header': "File Name", 'justify': None, 'style': "cyan", 'width': None },
+            { 'header': "Data", 'justify': None, 'style': "cyan", 'width': None },
             { 'header': "Format", 'justify': "center", 'style': "green", 'width': None },
         ],
         'rows': []
     }
     choices = []
-    for x, file in enumerate(testOutput):
+    for x, file in enumerate(currentStatus['output']):
         tableMetadata['rows'].append({
             'selector': x,
             'name': file['name'],
@@ -295,6 +269,10 @@ def editApiKey():
         console.print(f' [green]API Key updated to: [cyan]{hawqsAPIKey}')
         
     console.print()
+
+def alert(message):
+     console.print(Panel(message), style='red')
+     sleep(3)
 
 def exitApplication():
     console.print("exiting [italic red]HAWQS[/italic red] Web API test application", justify="center")
