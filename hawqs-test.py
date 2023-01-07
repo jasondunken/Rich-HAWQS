@@ -198,33 +198,34 @@ def getProjectData():
             'selector': x,
             'name': file['name'],
             'url': file['url'],
-            'file-format': file['format']
+            'format': file['format']
         })
         choices.append(str(x))
-    tableMetadata['rows'].append({ 'selector': 'a', 'name': "Download all files", 'file-format': ""})
+    tableMetadata['rows'].append({ 'selector': 'a', 'name': "Download all files", 'format': ""})
     choices.append("a")
-    tableMetadata['rows'].append({ 'selector': 'e', 'name': "[red]Exit to Main Menu", 'file-format': ""})
+    tableMetadata['rows'].append({ 'selector': 'e', 'name': "[red]Exit to Main Menu", 'format': ""})
     choices.append("e")
 
     table = Table(box=None)
     for column in tableMetadata['columns']:
         table.add_column(column['header'], justify=column['justify'], style=column['style'], width=column['width'])
     for row in tableMetadata['rows']:
-        table.add_row(f"<{row['selector']}>", row['name'], f"{row['file-format']}")
+        table.add_row(f"<{row['selector']}>", row['name'], f"{row['format']}")
 
     while True:
         console.print(table)
         fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
 
         if fileChoice == "e": break
-        if fileChoice == "a": getAllDataFiles(tableMetadata['rows'])
+        if fileChoice == "a": getAllDataFiles(currentStatus['output'])
         else :
-            fileData = tableMetadata['rows'][int(fileChoice)]
+            fileData = currentStatus['output'][int(fileChoice)]
             console.print(Panel(f"Fetching {fileData['name']}..."))
             getDataFile(fileData)
 
 def getAllDataFiles(fileData):
-    None
+    for file in fileData:
+        getDataFile(file)
 
 def getDataFile(fileData):
     try:
