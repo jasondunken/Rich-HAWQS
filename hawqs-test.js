@@ -2,17 +2,22 @@
 // Original code example from https://dev-api.hawqs.tamu.edu/#/docs/projects/submit
 // Refactored from node => plain html/js, axios => fetch
 
+// for this script to run you only need to call it from an html page with <div id='pageContent'>
+
+// const DEFAULT_API_URL = "current.hawqs.api.url"
+// const DEFAULT_API_KEY = "=Your+API_key="
+
 let submissionResult = null;
+const STATUS_CHECK_INTERVAL = 60000; // ms/check
+let statusCheckInterval = null;
 
 async function go() {
-    // HTML elements with declared ids have a corresponding global var initialized
-    // you technically don't need to use document.getElementById as long as ids are unique
-    // for this script to run you only need to call it from an html page with <div id='pageContent'>
-    pageContent.innerHTML = "<h1>Starting HAWQS API test...</h1>";
-    pageContent.innerHTML += "<h2>Checking API...<h2>\n";
-    pageContent.innerHTML += "<p>" + JSON.stringify(await pingAPI()) + "</p>";
-    pageContent.innerHTML += "<h2>Submitting Project...</h2>\n";
-    pageContent.innerHTML += "<p>" + JSON.stringify(await testSubmit()) + "</p>";
+    writeToPage("<h1>Starting HAWQS API test...</h1>");
+    writeToPage("<h2>Checking API...<h2>");
+    writeToPage("<p>" + JSON.stringify(await pingAPI()) + "</p>");
+    writeToPage("<h2>Submitting Project...</h2>");
+    writeToPage("<p>" + JSON.stringify(await testSubmit()) + "</p>");
+    monitorStatus();
 }
 
 async function pingAPI() {
@@ -22,8 +27,6 @@ async function pingAPI() {
 }
 
 async function testSubmit() {
-    //The following input data is a snippet for demonstration purposes.
-    //Use the Input Builder tab, Input JSON tab, and/or Input Definitions API for help constructing your input object.
     const inputData = {
         dataset: "HUC8",
         downstreamSubbasin: "07100009",
@@ -32,9 +35,9 @@ async function testSubmit() {
             target: 2,
             units: "km2",
         },
-        weatherDataset: "NCDC NWS/NOAA",
-        startingSimulationDate: "1961-01-01",
-        endingSimulationDate: "1965-12-31",
+        weatherDataset: "PRISM",
+        startingSimulationDate: "1981-01-01",
+        endingSimulationDate: "1985-12-31",
         warmupYears: 2,
         outputPrintSetting: "daily",
         reportData: {
@@ -50,49 +53,53 @@ async function testSubmit() {
 
     const postOptions = {
         method: "POST",
-        body: inputData,
+        body: JSON.stringify(inputData),
         headers: { "X-API-Key": DEFAULT_API_KEY, "Content-type": "application/json" },
     };
     const postResponse = await fetch(`https://${DEFAULT_API_URL}/projects/submit`, postOptions);
-    if (postResponse.ok) {
-        submissionResult = await postResponse.json();
+    submissionResult = await postResponse.json();
+    return submissionResult;
+}
+
+async function monitorStatus() {
+    writeToPage("<h3>Monitoring Project Status</h3>");
+    if (submissionResult.url) {
+        writeToPage(`<p>Project status URL: ${submissionResult.url}</p>`);
+        statusCheckInterval = setInterval(checkStatus, STATUS_CHECK_INTERVAL);
     } else {
-        return await postResponse.json();
+        writeToPage("<p>There was no URL returned from project submission!</p>");
     }
-
-    //Your project status URL is now stored in your submissionResult.
-    //It is up to you how to check the progress. The following example shows checking on an interval every 60 seconds.
-    //As an alternative to the polling the data example below, we do make use of Microsoft SignalR on the server to push updates to clients.
-    //This is more advanced than this example, so please contact the development team if needed.
-
-    // if (submissionResult !== null) {
-    //     let isComplete = false;
-    //     let projectStatus = null;
-    //     let intervalTimer = setInterval(async () => {
-    //         projectStatus = await checkStatus();
-    //     }, 60000);
-
-    //     if (projectStatus != null) {
-    //         if (projectStatus.status.errorStackTrace !== null) {
-    //             //There was an error running your project.
-    //             console.error(projectStatus.status.errorStackTrace);
-    //             clearInterval(intervalTimer);
-    //         } else if (projectStatus.status.progress >= 100) {
-    //             for (let file of projectStatus.output) {
-    //                 //Choose what to do with files here
-    //                 let name = file.name;
-    //                 let url = file.url;
-    //             }
-    //             clearInterval(intervalTimer);
-    //         }
-    //     }
-    // }
 }
 
 async function checkStatus() {
-    const getResponse = await fetch(submissionResult.url);
-    if (getResponse.data) return getResponse.data;
-    pageContent.innerHTML = "failed to fetch!";
+    const getOptions = { headers: { "X-API-Key": DEFAULT_API_KEY } };
+    const response = await fetch(submissionResult.url, getOptions);
+    if (response.ok) {
+        const projectStatus = await response.json();
+        const progress = projectStatus.status.progress;
+        writeToPage(`<p>Current progress ${progress}%</p>`);
+        if (progress >= 100) {
+            clearInterval(statusCheckInterval);
+            projectCompleted(projectStatus.output);
+        }
+    } else {
+        clearInterval(statusCheckInterval);
+    }
+}
+
+function projectCompleted(output) {
+    writeToPage("</h2>Project Completed</h2>");
+    let outputHtml = "<p>";
+    for (let file of output) {
+        outputHtml += `<div>Output: ${file.name} | URL: ${file.url}</div>`;
+    }
+    writeToPage(outputHtml + "</p>");
+}
+
+function writeToPage(content) {
+    // HTML elements with declared ids have a corresponding global var initialized
+    // you don't need to use document.getElementById if the id is unique
+    pageContent.innerHTML += content;
 }
 
 go();
