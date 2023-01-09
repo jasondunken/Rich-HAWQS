@@ -19,6 +19,7 @@ hawqsAPIKey = DEFAULT_API_KEY
 
 dataDownloadPath = os.getenv("DATA_DOWNLOAD_PATH")
 historyFilePath = os.getenv('HISTORY_FILE_PATH')
+historyFileName = "data-file-history.hst"
 
 currentProject = None
 currentProjectCompleted = False
@@ -195,7 +196,7 @@ def getProjectStatus():
         console.print(Panel("some kind of exception occurred", e))
 
 def updateHistory():
-    with open(historyFilePath, 'a+') as historyFile:
+    with open(os.path.join(historyFilePath, historyFileName), 'a+') as historyFile:
         for file in currentStatus['output']:
             historyFile.write(f"{file['url']}\n")
 
@@ -250,8 +251,13 @@ def getProjectData():
 
 def showFileHistory():
     urls = None
-    with open(historyFilePath, "r") as file:
-        urls = file.readlines()
+    try:
+        with open(os.path.join(historyFilePath, historyFileName), "r") as file:
+            urls = file.readlines()
+    
+    except Exception as ex:
+        alert("There is currently no project history")
+        return
 
     tableMetadata = {
         'columns': [
