@@ -17,6 +17,7 @@ hawqsAPIUrl = DEFAULT_API_URL
 DEFAULT_API_KEY = os.getenv('DEFAULT_API_KEY')
 hawqsAPIKey = DEFAULT_API_KEY
 
+dataDownloadPath = os.getenv("DATA_DOWNLOAD_PATH")
 historyFilePath = os.getenv('HISTORY_FILE_PATH')
 
 currentProject = None
@@ -46,7 +47,7 @@ def showMenu():
             { 'selector': "3", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "projects/submit" },
             { 'selector': "4", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "projects/:id" },
             { 'selector': "5", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
-            { 'selector': "6", 'action': "Get Previous Project Data File", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
+            { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
             { 'selector': "7", 'action': "Edit API URL", 'type': None, 'endpoint': None },
             { 'selector': "8", 'action': "Edit API Key", 'type': None, 'endpoint': None },
             { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
@@ -84,7 +85,7 @@ def executeChoice(choice):
             alert("[red] There must be a stored job ID. Submit the test project to create job ID")
             showMenu()
     if choice == "5":
-        if currentProjectCompleted():
+        if currentProjectCompleted:
             console.print("[green] Fetch Project Data")
             getProjectData()
         else:
@@ -208,11 +209,20 @@ def getProjectData():
         'rows': []
     }
     choices = []
+
+    fileMetadata = []
     for x, file in enumerate(currentStatus['output']):
+        project, name, url = parseUrl(file['url'])
+        fileMetadata.append({
+            'project': project,
+            'name': name,
+            'url': url
+        })
+
         tableMetadata['rows'].append({
             'selector': x,
             'name': file['name'],
-            'url': file['url'],
+            'url': url,
             'format': file['format']
         })
         choices.append(str(x))
@@ -232,9 +242,9 @@ def getProjectData():
         fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
 
         if fileChoice == "e": break
-        if fileChoice == "a": getAllDataFiles(currentStatus['output'])
+        if fileChoice == "a": getAllDataFiles(fileMetadata)
         else :
-            fileData = currentStatus['output'][int(fileChoice)]
+            fileData = fileMetadata[int(fileChoice)]
             console.print(Panel(f"Fetching {fileData['name']}..."))
             getDataFile(fileData)
 
@@ -245,26 +255,31 @@ def showFileHistory():
 
     tableMetadata = {
         'columns': [
-            { 'header': "", 'justify': "center", 'style': "yellow", 'width': 3 },
-            { 'header': "Name", 'justify': None, 'style': "cyan", 'width': None },
+            { 'header': "", 'justify': "right", 'style': "yellow", 'width': 7 },
+            { 'header': "Project", 'justify': None, 'style': "green", 'width': None },
+            { 'header': "File", 'justify': None, 'style': "cyan", 'width': None },
         ],
         'rows': []
     }
     choices = []
     for x, url in enumerate(urls):
+        project, name, url = parseUrl(url)
+
+        
         tableMetadata['rows'].append({ 
             "selector": x,
-            "name": url[url.rfind("/", 0, url.rfind("/")):].rstrip(),
-            "url": url.rstrip() })
+            "project": project,
+            "name": name,
+            "url": url })
         choices.append(str(x))
-    tableMetadata['rows'].append({ 'selector': 'e', 'name': "[red]Exit to Main Menu"})
+    tableMetadata['rows'].append({ 'selector': 'e', 'project': "[red]Exit to Main Menu", 'name': "" })
     choices.append("e")
 
     table = Table(box=None)
     for column in tableMetadata['columns']:
         table.add_column(column['header'], justify=column['justify'], style=column['style'], width=column['width'])
     for row in tableMetadata['rows']:
-        table.add_row(f"<{row['selector']}>", row['name'])
+        table.add_row(f"<{row['selector']}>", row['project'], row['name'])
 
     while True:
         console.print(table)
@@ -272,7 +287,7 @@ def showFileHistory():
 
         if fileChoice == "e": break
         else :
-            fileData = currentStatus['output'][int(fileChoice)]
+            fileData = tableMetadata['rows'][int(fileChoice)]
             console.print(Panel(f"Fetching {fileData['name']}..."))
             getDataFile(fileData)
     
@@ -294,15 +309,29 @@ def getDataFile(fileData):
             content = response.read()
             console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
-        console.write(Panel(f"content is none: {content is None}"))
         with console.status("[bold green] Saving file...") as _:
             if content:
-                fileName = fileData['url'][fileData['url'].rindex("/"):]
-                with open(fileName, 'wb') as f:
+                projectName = fileData['project']
+                downloadFolderPath = os.path.join(dataDownloadPath, projectName)
+                if not os.path.exists(downloadFolderPath):
+                    os.makedirs(downloadFolderPath)
+                fileName = fileData['name']
+                with open(os.path.join(downloadFolderPath, fileName), 'wb+') as f:
                     f.write(content)
+
+                console.print(Panel(f"{fileName} saved"))
 
     except Exception as e:
         console.print(Panel("some kind of exception occurred", e))
+
+def parseUrl(url):
+    url = url.rstrip()
+    # gets from after second to last / to end => projectname/filename
+    urlEnd = url[url.rfind("/", 0, url.rfind("/")):][1:]
+    project = urlEnd[:urlEnd.find("/")]
+    name = urlEnd[urlEnd.find("/"):][1:]
+
+    return project, name, url
 
 def editApiUrl():
     global hawqsAPIUrl 
