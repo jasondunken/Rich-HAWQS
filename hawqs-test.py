@@ -17,7 +17,10 @@ hawqsAPIUrl = DEFAULT_API_URL
 DEFAULT_API_KEY = os.getenv('DEFAULT_API_KEY')
 hawqsAPIKey = DEFAULT_API_KEY
 
+historyFilePath = os.getenv('HISTORY_FILE_PATH')
+
 currentProject = None
+currentProjectCompleted = False
 currentJobID = None
 currentStatus = None
 
@@ -42,9 +45,10 @@ def showMenu():
             { 'selector': "2", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "projects/input-definitions" },
             { 'selector': "3", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "projects/submit" },
             { 'selector': "4", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "projects/:id" },
-            { 'selector': "5", 'action': "Get Completed Project Data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
-            { 'selector': "6", 'action': "Edit API URL", 'type': None, 'endpoint': None },
-            { 'selector': "7", 'action': "Edit API Key", 'type': None, 'endpoint': None },
+            { 'selector': "5", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
+            { 'selector': "6", 'action': "Get Previous Project Data File", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
+            { 'selector': "7", 'action': "Edit API URL", 'type': None, 'endpoint': None },
+            { 'selector': "8", 'action': "Edit API Key", 'type': None, 'endpoint': None },
             { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
         ]
     }
@@ -80,16 +84,19 @@ def executeChoice(choice):
             alert("[red] There must be a stored job ID. Submit the test project to create job ID")
             showMenu()
     if choice == "5":
-        if isProjectCompleted():
+        if currentProjectCompleted():
             console.print("[green] Fetch Project Data")
             getProjectData()
         else:
             alert("[red] Project progress must be 100% complete to get data. Check status again")
             showMenu()
     if choice == "6":
+        console.print("[green] Fetch Previous Project Data")
+        showFileHistory()
+    if choice == "7":
         console.print("[yellow] Edit URL")
         editApiUrl()
-    if choice == "7":
+    if choice == "8":
         console.print("[yellow] Edit Key")
         editApiKey()
     if choice == "e":
@@ -117,8 +124,9 @@ def getInputDefinitions():
         console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
 def submitProject():
-    global currentProject, currentJobID, currentStatus
+    global currentProject, currentProjectCompleted, currentJobID, currentStatus
     currentProject = None
+    currentProjectCompleted = False
     currentJobID = None
     currentStatus = None
 
@@ -176,12 +184,19 @@ def getProjectStatus():
             console.print(Panel(f"[green]Request Status:[/] {response.status}"))
 
             currentStatus = json.loads(currentStatus)
+            global currentProjectCompleted
+            if currentStatus and not currentProjectCompleted:
+                if currentStatus['status']['progress'] >= 100:
+                    currentProjectCompleted = True
+                    updateHistory()
+
     except Exception as e:
         console.print(Panel("some kind of exception occurred", e))
 
-def isProjectCompleted():
-    if currentStatus and currentStatus['status']['progress'] >= 100:
-        return True
+def updateHistory():
+    with open(historyFilePath, 'a+') as historyFile:
+        for file in currentStatus['output']:
+            historyFile.write(f"{file['url']}\n")
 
 def getProjectData():
     tableMetadata = {
@@ -223,19 +238,69 @@ def getProjectData():
             console.print(Panel(f"Fetching {fileData['name']}..."))
             getDataFile(fileData)
 
+def showFileHistory():
+    urls = None
+    with open(historyFilePath, "r") as file:
+        urls = file.readlines()
+
+    tableMetadata = {
+        'columns': [
+            { 'header': "", 'justify': "center", 'style': "yellow", 'width': 3 },
+            { 'header': "Name", 'justify': None, 'style': "cyan", 'width': None },
+        ],
+        'rows': []
+    }
+    choices = []
+    for x, url in enumerate(urls):
+        tableMetadata['rows'].append({ 
+            "selector": x,
+            "name": url[url.rfind("/", 0, url.rfind("/")):].rstrip(),
+            "url": url.rstrip() })
+        choices.append(str(x))
+    tableMetadata['rows'].append({ 'selector': 'e', 'name': "[red]Exit to Main Menu"})
+    choices.append("e")
+
+    table = Table(box=None)
+    for column in tableMetadata['columns']:
+        table.add_column(column['header'], justify=column['justify'], style=column['style'], width=column['width'])
+    for row in tableMetadata['rows']:
+        table.add_row(f"<{row['selector']}>", row['name'])
+
+    while True:
+        console.print(table)
+        fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
+
+        if fileChoice == "e": break
+        else :
+            fileData = currentStatus['output'][int(fileChoice)]
+            console.print(Panel(f"Fetching {fileData['name']}..."))
+            getDataFile(fileData)
+    
+
+
 def getAllDataFiles(fileData):
     for file in fileData:
         getDataFile(file)
 
 def getDataFile(fileData):
     try:
+        content = None
         connection = http.client.HTTPSConnection(hawqsAPIUrl)
         headers = { 'X-API-Key': hawqsAPIKey }
-        with console.status("[bold green] Processing request...[/]") as _:
+        with console.status("[bold green] Processing request...") as _:
             connection.request('GET', fileData['url'], None, headers)
             response = connection.getresponse()
             console.print(Panel(f"{fileData['name']} received"))
+            content = response.read()
             console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+
+        console.write(Panel(f"content is none: {content is None}"))
+        with console.status("[bold green] Saving file...") as _:
+            if content:
+                fileName = fileData['url'][fileData['url'].rindex("/"):]
+                with open(fileName, 'wb') as f:
+                    f.write(content)
+
     except Exception as e:
         console.print(Panel("some kind of exception occurred", e))
 
