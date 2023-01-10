@@ -43,14 +43,14 @@ def showMenu():
             { 'header': "Endpoint", 'justify': None, 'style': "green", 'width': None },
         ],
         'rows': [
-            { 'selector': "1", 'action': "Check HAWQS API Status", 'type': "GET", 'endpoint': "test/clientget" },
-            { 'selector': "2", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "projects/input-definitions" },
-            { 'selector': "3", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "projects/submit" },
-            { 'selector': "4", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "projects/:id" },
-            { 'selector': "5", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "api-files/api-projects/epaDevAccess/" },
-            { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
-            { 'selector': "7", 'action': "Edit API URL", 'type': None, 'endpoint': None },
-            { 'selector': "8", 'action': "Edit API Key", 'type': None, 'endpoint': None },
+            { 'selector': "0", 'action': "Check HAWQS API Status", 'type': "GET", 'endpoint': "HAWQS/test/clientget" },
+            { 'selector': "1", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "HAWQS/projects/input-definitions" },
+            { 'selector': "2", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "HAWQS/projects/submit" },
+            { 'selector': "3", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "HAWQS/projects/:id" },
+            { 'selector': "4", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "HAWQS/api-files/api-projects/epaDevAccess/" },
+            { 'selector': "5", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
+            { 'selector': "6", 'action': "Edit API URL", 'type': None, 'endpoint': None },
+            { 'selector': "7", 'action': "Edit API Key", 'type': None, 'endpoint': None },
             { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
         ]
     }
@@ -69,36 +69,36 @@ def showMenu():
 
 def executeChoice(choice):
     console.print()
-    if choice == "1":
+    if choice == "0":
         console.print("[green] Fetching API Status")
         getAPIStatus()
-    if choice == "2":
+    if choice == "1":
         console.print("[green] Fetching Input Definitions")
         getInputDefinitions()
-    if choice == "3":
+    if choice == "2":
         console.print("[green] Submitting Project")
         submitProject()
-    if choice == "4":
+    if choice == "3":
         if isCurrentJob():
             console.print("[green] Fetching Project Status")
             getProjectStatus()
         else:
             alert("[red] There must be a stored job ID. Submit the test project to create job ID")
             showMenu()
-    if choice == "5":
+    if choice == "4":
         if currentProjectCompleted:
             console.print("[green] Fetch Project Data")
             getProjectData()
         else:
             alert("[red] Project progress must be 100% complete to get data. Check status again")
             showMenu()
-    if choice == "6":
+    if choice == "5":
         console.print("[green] Fetch Previous Project Data")
         showFileHistory()
-    if choice == "7":
+    if choice == "6":
         console.print("[yellow] Edit URL")
         editApiUrl()
-    if choice == "8":
+    if choice == "7":
         console.print("[yellow] Edit Key")
         editApiKey()
     if choice == "e":
