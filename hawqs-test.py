@@ -200,6 +200,14 @@ def updateHistory():
         for file in currentStatus['output']:
             historyFile.write(f"{file['url']}\n")
 
+def clearHistory():
+    try:
+        with open(os.path.join(historyFilePath, historyFileName), "w") as historyFile:
+            historyFile.write("")
+    except Exception as ex:
+        alert("History already cleared")
+        return
+
 def getProjectData():
     tableMetadata = {
         'columns': [
@@ -278,6 +286,8 @@ def showFileHistory():
             "name": name,
             "url": url })
         choices.append(str(x))
+    tableMetadata['rows'].append({ 'selector': 'c', 'project': "[blue]Clear history", 'name': "" })
+    choices.append("c")
     tableMetadata['rows'].append({ 'selector': 'e', 'project': "[red]Exit to Main Menu", 'name': "" })
     choices.append("e")
 
@@ -292,12 +302,11 @@ def showFileHistory():
         fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
 
         if fileChoice == "e": break
+        if fileChoice == "c": clearHistory()
         else :
             fileData = tableMetadata['rows'][int(fileChoice)]
             console.print(Panel(f"Fetching {fileData['name']}..."))
             getDataFile(fileData)
-    
-
 
 def getAllDataFiles(fileData):
     for file in fileData:
