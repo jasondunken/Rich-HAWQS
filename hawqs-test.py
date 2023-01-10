@@ -1,7 +1,6 @@
 import http.client
 import json
 import os
-from time import sleep
 
 from dotenv import load_dotenv
 
@@ -30,7 +29,7 @@ currentProjectCompleted = False
 currentJobID = None
 currentStatus = None
 
-console = Console(color_system='auto')
+console = Console(color_system='auto', width=80)
 
 def showMenu():
     console.print(Panel(f"[green]HAWQS API URL: [cyan]{hawqsAPIUrl}[/] \nHAWQS API Key: [cyan]{hawqsAPIKey}[/]"), style='yellow')
@@ -42,7 +41,7 @@ def showMenu():
     tableMetadata = {
         'columns': [
             { 'header': "", 'justify': "center", 'style': "yellow", 'width': 3 },
-            { 'header': "Action", 'justify': "center", 'style': "blue", 'width': None },
+            { 'header': "Action", 'justify': None, 'style': "blue", 'width': None },
             { 'header': "", 'justify': None, 'style': "magenta", 'width': None },
             { 'header': "Endpoint", 'justify': None, 'style': "green", 'width': None },
         ],
@@ -53,10 +52,10 @@ def showMenu():
             { 'selector': "3", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "HAWQS/projects/:id" },
             { 'selector': "4", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "HAWQS/api-files/api-projects/epaDevAccess/" },
             { 'selector': "5", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
-            { 'selector': "6", 'action': "[bright_black]HMS Test", 'type': "", 'endpoint': "" },
+            { 'selector': "6", 'action': "[royal_blue1]HMS Tests", 'type': "", 'endpoint': "" },
             { 'selector': "7", 'action': "Edit API URL", 'type': None, 'endpoint': None },
             { 'selector': "8", 'action': "Edit API Key", 'type': None, 'endpoint': None },
-            { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
+            { 'selector': "e", 'action': "[red]Exit Application", 'type': None, 'endpoint': None },
         ]
     }
     menuChoices = [row['selector'] for row in tableMetadata['rows']]
@@ -69,7 +68,7 @@ def showMenu():
         else:
             table.add_row(f"<{row['selector']}>", row['action'])
     
-    console.print(table)
+    console.print(table, justify="center")
     executeChoice(Prompt.ask(" Make Selection >", choices=menuChoices, show_choices=False))
 
 def executeChoice(choice):
@@ -102,8 +101,8 @@ def executeChoice(choice):
         showFileHistory()
     if choice == "6":
         console.print("[cyan] Running HMS Test")
-        hmsTest = hms.HMSTest(console)
-        hmsTest.test()
+        hmsTests = hms.HMSTests(console)
+        hmsTests.showHMSMenu()
     if choice == "7":
         console.print("[yellow] Edit URL")
         editApiUrl()
@@ -256,7 +255,7 @@ def getProjectData():
         table.add_row(f"<{row['selector']}>", row['name'], f"{row['format']}")
 
     while True:
-        console.print(table)
+        console.print(table, justify="center")
         fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
 
         if fileChoice == "e": break
@@ -307,7 +306,7 @@ def showFileHistory():
         table.add_row(f"<{row['selector']}>", row['project'], row['name'])
 
     while True:
-        console.print(table)
+        console.print(table, justify="center")
         fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
 
         if fileChoice == "e": break
@@ -405,7 +404,7 @@ if __name__ == "__main__":
                   f"[bright_yellow]|  |  |     |   __| / |  |  |  _  | | | |     |   __|  |  _  |  _  |     |\n" + \
                   f"[bright_cyan]|     | | | |__   |/ /|     |     | | | |  |  |__   |  |     |   __|-   -|\n" + \
                   f"[bright_blue]|__|__|_|_|_|_____|_/ |__|__|__|__|_____|__  _|_____|  |__|__|__|  |_____|\n" + \
-                  f"[bright_magenta]                |__|                           "
+                  f"[blue]                |__|                           "
     console.print(Panel.fit(asciiString), justify='center', style='red')
 
     console.print("[bright_cyan]HMS[/]/[red]HAWQS[/] Web API test application", justify="center")
