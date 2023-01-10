@@ -2,3 +2,5 @@
 hawqs-env.js
 
 data/
+
+**/__pycache__/

@@ -11,6 +11,10 @@ from rich.table import Table
 from rich.prompt import Prompt
 from rich.json import JSON
 
+import hms
+
+from utils.alerts import alert
+
 load_dotenv()
 DEFAULT_API_URL = os.getenv('DEFAULT_API_URL')
 hawqsAPIUrl = DEFAULT_API_URL
@@ -49,8 +53,9 @@ def showMenu():
             { 'selector': "3", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "HAWQS/projects/:id" },
             { 'selector': "4", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "HAWQS/api-files/api-projects/epaDevAccess/" },
             { 'selector': "5", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
-            { 'selector': "6", 'action': "Edit API URL", 'type': None, 'endpoint': None },
-            { 'selector': "7", 'action': "Edit API Key", 'type': None, 'endpoint': None },
+            { 'selector': "6", 'action': "[bright_black]HMS Test", 'type': "", 'endpoint': "" },
+            { 'selector': "7", 'action': "Edit API URL", 'type': None, 'endpoint': None },
+            { 'selector': "8", 'action': "Edit API Key", 'type': None, 'endpoint': None },
             { 'selector': "e", 'action': "[red]Exit Application[/]", 'type': None, 'endpoint': None },
         ]
     }
@@ -83,22 +88,26 @@ def executeChoice(choice):
             console.print("[green] Fetching Project Status")
             getProjectStatus()
         else:
-            alert("[red] There must be a stored job ID. Submit the test project to create job ID")
+            alert(console, "[red] There must be a stored job ID. Submit the test project to create job ID")
             showMenu()
     if choice == "4":
         if currentProjectCompleted:
             console.print("[green] Fetch Project Data")
             getProjectData()
         else:
-            alert("[red] Project progress must be 100% complete to get data. Check status again")
+            alert(console, "[red] Project progress must be 100% complete to get data. Check status again")
             showMenu()
     if choice == "5":
         console.print("[green] Fetch Previous Project Data")
         showFileHistory()
     if choice == "6":
+        console.print("[cyan] Running HMS Test")
+        hmsTest = hms.HMSTest(console)
+        hmsTest.test()
+    if choice == "7":
         console.print("[yellow] Edit URL")
         editApiUrl()
-    if choice == "7":
+    if choice == "8":
         console.print("[yellow] Edit Key")
         editApiKey()
     if choice == "e":
@@ -205,7 +214,7 @@ def clearHistory():
         with open(os.path.join(historyFilePath, historyFileName), "w") as historyFile:
             historyFile.write("")
     except Exception as ex:
-        alert("History already cleared")
+        alert(console, "History already cleared")
         return
 
 def getProjectData():
@@ -264,7 +273,7 @@ def showFileHistory():
             urls = file.readlines()
     
     except Exception as ex:
-        alert("There is currently no project history")
+        alert(console, "There is currently no project history")
         return
 
     tableMetadata = {
@@ -379,10 +388,6 @@ def editApiKey():
         console.print(f' [green]API Key updated to: [cyan]{hawqsAPIKey}')
         
     console.print()
-
-def alert(message):
-     console.print(Panel(message), style='red')
-     sleep(3)
 
 def exitApplication():
     console.print("exiting [italic red]HAWQS[/italic red] Web API test application", justify="center")
