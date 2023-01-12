@@ -155,9 +155,9 @@ class HAWQSTests:
             self.console.print(Panel(JSON(currentProject)))
             self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
 
-            currentProject = json.loads(currentProject)
-            if currentProject['id']:
-                currentJobID = currentProject['id']
+            self.currentProject = json.loads(currentProject)
+            if self.currentProject['id']:
+                self.currentJobID = self.currentProject['id']
 
     def isCurrentJob(self):
         if self.currentJobID:

@@ -86,6 +86,7 @@ class HAWQSTestClient:
             self.console.print(f' [green]API Key reset to default: [cyan]{self.hawqsTests.getKey()}')
         else:
             self.hawqsTests.setKey(newKey)
+            self.hmsTests.setKey(newKey)
             self.console.print(f' [green]API Key updated to: [cyan]{self.hawqsTests.getKey()}')
             
         self.console.print()
