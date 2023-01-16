@@ -74,16 +74,20 @@ class HMSTests:
         self.showHMSMenu()
 
     def setup(self):
+        self.console.print(Panel("[green]Project Setup"))
         self.getInputDefinitions()
 
     def submit(self):
+        self.console.print(Panel("[green]Submitting Project"))
         self.submitProject()
 
     def status(self):
-        print("status!")
+        self.console.print(Panel("[green]Submitting Project"))
+        self.getProjectStatus()
 
     def data(self):
-        print("data!")
+        self.console.print(Panel("[green]Get Project Data"))
+        self.getProjectData()
 
     def getInputDefinitions(self):
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
@@ -137,5 +141,11 @@ class HMSTests:
             if self.currentProject['id']:
                 self.currentJobID = self.currentProject['id']
 
-    def setKey(newKey):
+    def getProjectStatus(self):
+        None
+    
+    def getProjectData(self):
+        None
+
+    def setKey(self, newKey):
         self.hawqsAPIKey = newKey
