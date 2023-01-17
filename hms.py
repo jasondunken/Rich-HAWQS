@@ -11,11 +11,6 @@ from utils.alerts import alert
 
 class HMSTests:
     hmsBaseUrl = os.getenv("DEV_HMS_HAWQS_BASE_URL")
-    hmsInputsUrl = os.getenv("HMS_HAWQS_INPUTS_URL")
-    hmsSubmitUrl = os.getenv("HMS_HAWQS_SUBMIT_URL")
-    hmsStatusUrl = os.getenv("HMS_HAWQS_STATUS_URL")
-    hmsDataUrl = os.getenv("HMS_HAWQS_DATA_URL")
-
     hawqsAPIKey = os.getenv("DEFAULT_API_KEY")
 
     def __init__(self, console):
@@ -93,7 +88,7 @@ class HMSTests:
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         headers = { 'X-API-Key': self.hawqsAPIKey }
         with self.console.status("[bold green] Processing request...[/]") as _:
-            connection.request('GET', self.hmsInputsUrl, None, headers)
+            connection.request('GET', "project/inputs", None, headers)
             response = connection.getresponse()
             self.console.print(Panel(JSON(response.read().decode())))
             self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
@@ -131,7 +126,7 @@ class HMSTests:
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey, 'Content-type': 'application/json' }
-            connection.request('POST', self.hmsSubmitUrl, json.dumps(inputData), headers)
+            connection.request('POST', "project/submit", json.dumps(inputData), headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
             self.console.print(Panel(JSON(currentProject)))
@@ -142,10 +137,32 @@ class HMSTests:
                 self.currentJobID = self.currentProject['id']
 
     def getProjectStatus(self):
-        None
+        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
+        with self.console.status("[bold green] Processing request...[/]") as _:
+            headers = { 'X-API-Key': self.hawqsAPIKey }
+            connection.request('GET', "project/status", None, headers)
+            response = connection.getresponse()
+            currentStatus = response.read().decode()
+            self.console.print(Panel(JSON(currentStatus)))
+            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+
+            self.currentStatus = json.loads(currentStatus)
+            if self.currentStatus['id']:
+                self.currentJobID = self.currentProject['id']
     
     def getProjectData(self):
-        None
+        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
+        with self.console.status("[bold green] Processing request...[/]") as _:
+            headers = { 'X-API-Key': self.hawqsAPIKey }
+            connection.request('GET', "project/data", None, headers)
+            response = connection.getresponse()
+            currentProject = response.read().decode()
+            self.console.print(Panel(JSON(currentProject)))
+            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+
+            self.currentProject = json.loads(currentProject)
+            if self.currentProject['id']:
+                self.currentJobID = self.currentProject['id']
 
     def setKey(self, newKey):
         self.hawqsAPIKey = newKey
