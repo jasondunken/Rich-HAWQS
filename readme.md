@@ -5,7 +5,8 @@
 -   Rich because it uses the [rich](https://github.com/Textualize/rich) python package
 
 A Python CLI application for testing the HMS/HAWQS APIs. With minor changes it could be used to submit and retrieve arbitrary HAWQS projects. For now it uses a static test case.
-To use this application you need to provide an env file with the current url for the HAWQS API, your HAWQS API key, and some other stuff that's needed
+
+To use this application you need to provide an env file with the current url for the HAWQS API, your HAWQS API key, and some other stuff.
 
 pip and Anaconda environment files are provided
 
