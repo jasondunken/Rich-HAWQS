@@ -11,6 +11,8 @@ from rich.json import JSON
 
 from utils.alerts import alert
 
+import project
+
 class HAWQSTests:
     def __init__(self, console):
         load_dotenv()
@@ -122,34 +124,10 @@ class HAWQSTests:
         self.currentJobID = None
         self.currentStatus = None
 
-        inputData = {
-            'dataset': 'HUC8',
-            'downstreamSubbasin': '07100009',
-            'setHrus': {
-                'method': 'area',
-                'target': 2,
-                'units': 'km2'
-            },
-            'weatherDataset': 'PRISM',
-            'startingSimulationDate': '1981-01-01',
-            'endingSimulationDate': '1985-12-31',
-            'warmupYears': 2,
-            'outputPrintSetting': 'daily',
-            'reportData': {
-                'formats': [ 'csv', 'netcdf' ],
-                'units': 'metric',
-                'outputs': {
-                    'rch': {
-                        'statistics': [ 'daily_avg' ]
-                    }
-                }
-            }
-        }
-
         connection = http.client.HTTPSConnection(self.hawqsAPIUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey, 'Content-type': 'application/json' }
-            connection.request('POST', '/projects/submit', json.dumps(inputData), headers)
+            connection.request('POST', '/projects/submit', json.dumps(project.inputData), headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
             self.console.print(Panel(JSON(currentProject)))
