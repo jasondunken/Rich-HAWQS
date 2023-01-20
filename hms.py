@@ -33,11 +33,12 @@ class HMSTests:
                 { 'header': "Endpoint", 'justify': None, 'style': "green", 'width': None },
             ],
             'rows': [
-                { 'selector': "0", 'action': "HMS/HAWQS project setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
-                { 'selector': "1", 'action': "HMS/HAWQS submit project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
-                { 'selector': "2", 'action': "HMS/HAWQS project status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
-                { 'selector': "3", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id" },
-                { 'selector': "4", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
+                { 'selector': "0", 'action': "HMS/HAWQS API Status", 'type': "GET", 'endpoint': "HMS/hawqs/status" },
+                { 'selector': "1", 'action': "HMS/HAWQS project setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
+                { 'selector': "2", 'action': "HMS/HAWQS submit project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
+                { 'selector': "3", 'action': "HMS/HAWQS project status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
+                { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id" },
+                { 'selector': "5", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
                 { 'selector': "e", 'action': "[red]Back to Main Menu", 'type': None, 'endpoint': None },
             ]
         }
