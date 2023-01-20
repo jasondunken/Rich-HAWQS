@@ -56,19 +56,25 @@ class HMSTests:
 
     def executeChoice(self, choice):
         if choice == "0":
-            self.setup()
+            self.checkStatus()
         if choice == "1":
-            self.submit()
+            self.setup()
         if choice == "2":
-            self.status()
+            self.submit()
         if choice == "3":
-            self.data()
+            self.status()
         if choice == "4":
+            self.data()
+        if choice == "5":
             self.history()
         if choice == "e":
             return
 
         self.showHMSMenu()
+
+    def checkStatus(self):
+        self.console.print(Panel("[green]Check API Status"))
+        self.getAPIStatus()
 
     def setup(self):
         self.console.print(Panel("[green]Project Setup"))
@@ -85,6 +91,15 @@ class HMSTests:
     def data(self):
         self.console.print(Panel("[green]Get Project Data"))
         self.getProjectData()
+
+    def getAPIStatus(self):
+        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
+        with self.console.status("[bold green] Processing request...[/]") as _:
+            connection.request('GET', "status", None)
+            response = connection.getresponse()
+            self.console.print(Panel(JSON(response.read().decode())))
+            self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+
 
     def getInputDefinitions(self):
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
