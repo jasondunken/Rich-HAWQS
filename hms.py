@@ -5,9 +5,8 @@ import os
 from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt
-from rich.json import JSON
 
-from utils.alerts import alert
+from utils.ui import alert, showResponse
 
 import project
 
@@ -98,8 +97,7 @@ class HMSTests:
         with self.console.status("[bold green] Processing request...[/]") as _:
             connection.request('GET', "status", None)
             response = connection.getresponse()
-            self.console.print(Panel(JSON(response.read().decode())))
-            self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+            showResponse(self.console, response.read().decode(), response.status)
 
 
     def getInputDefinitions(self):
@@ -108,8 +106,7 @@ class HMSTests:
         with self.console.status("[bold green] Processing request...[/]") as _:
             connection.request('GET', "project/inputs", None, headers)
             response = connection.getresponse()
-            self.console.print(Panel(JSON(response.read().decode())))
-            self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+            showResponse(self.console, response.read().decode(), response.status)
 
     def submitProject(self):
         self.currentProject = None
@@ -123,8 +120,7 @@ class HMSTests:
             connection.request('POST', "project/submit", json.dumps(project.inputData), headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
-            self.console.print(Panel(JSON(currentProject)))
-            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+            showResponse(self.console, currentProject, response.status)
 
             self.currentProject = json.loads(currentProject)
             if self.currentProject['id']:
@@ -137,8 +133,7 @@ class HMSTests:
             connection.request('GET', "project/status", None, headers)
             response = connection.getresponse()
             currentStatus = response.read().decode()
-            self.console.print(Panel(JSON(currentStatus)))
-            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+            showResponse(self.console, currentStatus, response.status)
 
             self.currentStatus = json.loads(currentStatus)
             if self.currentStatus['id']:
@@ -151,8 +146,7 @@ class HMSTests:
             connection.request('GET', "project/data", None, headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
-            self.console.print(Panel(JSON(currentProject)))
-            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+            showResponse(self.console, currentProject, response.status)
 
             self.currentProject = json.loads(currentProject)
             if self.currentProject['id']:

@@ -9,7 +9,7 @@ from rich.table import Table
 from rich.prompt import Prompt
 from rich.json import JSON
 
-from utils.alerts import alert
+from utils.ui import alert, showResponse
 
 import project
 
@@ -106,8 +106,7 @@ class HAWQSTests:
         with self.console.status("[bold green] Processing request...[/]") as _:
             connection.request('GET', '/test/clientget', None, headers)
             response = connection.getresponse()
-            self.console.print(Panel(JSON(response.read().decode())))
-            self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+            showResponse(self.console, response.read().decode(), response.status)
 
     def getInputDefinitions(self):
         connection = http.client.HTTPSConnection(self.hawqsAPIUrl)
@@ -115,8 +114,7 @@ class HAWQSTests:
         with self.console.status("[bold green] Processing request...[/]") as _:
             connection.request('GET', '/projects/input-definitions', None, headers)
             response = connection.getresponse()
-            self.console.print(Panel(JSON(response.read().decode())))
-            self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+            showResponse(self.console, response.read().decode(), response.status)
 
     def submitProject(self):
         self.currentProject = None
@@ -130,8 +128,7 @@ class HAWQSTests:
             connection.request('POST', '/projects/submit', json.dumps(project.inputData), headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
-            self.console.print(Panel(JSON(currentProject)))
-            self.console.print(Panel(f"[green] Request Status:[/] {response.status}"))
+            showResponse(self.console, currentProject, response.status)
 
             self.currentProject = json.loads(currentProject)
             if self.currentProject['id']:
@@ -148,9 +145,8 @@ class HAWQSTests:
             with self.console.status("[bold green] Processing request...[/]") as _:
                 connection.request('GET', f'/projects/{self.currentJobID}', None, headers)
                 response = connection.getresponse()
-                self.currentStatus = response.read().decode()
-                self.console.print(Panel(JSON(self.currentStatus)))
-                self.console.print(Panel(f"[green]Request Status:[/] {response.status}"))
+                currentStatus = response.read().decode()
+                showResponse(self.console, currentStatus, response.status)
 
                 self.currentStatus = json.loads(self.currentStatus)
                 if self.currentStatus and not self.currentProjectCompleted:
