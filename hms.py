@@ -85,12 +85,18 @@ class HMSTests:
         self.submitProject()
 
     def status(self):
-        self.console.print(Panel("[green]Submitting Project"))
-        self.getProjectStatus()
+        self.console.print(Panel("[green]Check Project Status"))
+        if (self.currentJobID):
+            self.getProjectStatus()
+        else:
+            alert("No Project ID Stored")
 
     def data(self):
         self.console.print(Panel("[green]Get Project Data"))
-        self.getProjectData()
+        if (self.currentProjectCompleted):
+            self.getProjectData()
+        else:
+            alert("No Completed Project")
 
     def getAPIStatus(self):
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
@@ -130,7 +136,7 @@ class HMSTests:
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "project/status", None, headers)
+            connection.request('GET', "project/status/" + self.currentJobID, None, headers)
             response = connection.getresponse()
             currentStatus = response.read().decode()
             showResponse(self.console, currentStatus, response.status)
@@ -139,11 +145,11 @@ class HMSTests:
             if self.currentStatus['id']:
                 self.currentJobID = self.currentProject['id']
     
-    def getProjectData(self):
+    def getProjectData(self, process):
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "project/data", None, headers)
+            connection.request('GET', "project/data/" + self.currentJobID + "?process=" + process, None, headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
             showResponse(self.console, currentProject, response.status)
