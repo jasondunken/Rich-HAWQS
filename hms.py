@@ -2,6 +2,8 @@ import http.client
 import json
 import os
 
+from dotenv import load_dotenv
+
 from rich.panel import Panel
 from rich.table import Table
 from rich.prompt import Prompt
@@ -11,10 +13,11 @@ from utils.ui import alert, showResponse
 import project
 
 class HMSTests:
-    hmsBaseUrl = os.getenv("DEV_HMS_HAWQS_BASE_URL")
-    hawqsAPIKey = os.getenv("DEFAULT_API_KEY")
-
     def __init__(self, console):
+        load_dotenv()
+        self.hmsBaseUrl = os.getenv("DEV_HMS_HAWQS_BASE_URL")
+        self.hawqsAPIKey = os.getenv("DEFAULT_API_KEY")
+
         self.console = console
         
         self.currentProject = None
@@ -32,7 +35,7 @@ class HMSTests:
                 { 'header': "Endpoint", 'justify': None, 'style': "green", 'width': None },
             ],
             'rows': [
-                { 'selector': "0", 'action': "HMS/HAWQS API Status", 'type': "GET", 'endpoint': "HMS/hawqs/status" },
+                # { 'selector': "0", 'action': "HMS/HAWQS API Status", 'type': "GET", 'endpoint': "HMS/hawqs/status" },
                 { 'selector': "1", 'action': "HMS/HAWQS project setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
                 { 'selector': "2", 'action': "HMS/HAWQS submit project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
                 { 'selector': "3", 'action': "HMS/HAWQS project status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
@@ -55,8 +58,6 @@ class HMSTests:
         self.executeChoice(Prompt.ask(" Make Selection >", choices=menuChoices, show_choices=False))
 
     def executeChoice(self, choice):
-        if choice == "0":
-            self.checkStatus()
         if choice == "1":
             self.setup()
         if choice == "2":
@@ -71,10 +72,6 @@ class HMSTests:
             return
 
         self.showHMSMenu()
-
-    def checkStatus(self):
-        self.console.print(Panel("[green]Check API Status"))
-        self.getAPIStatus()
 
     def setup(self):
         self.console.print(Panel("[green]Project Setup"))
@@ -98,19 +95,12 @@ class HMSTests:
         else:
             alert("No Completed Project")
 
-    def getAPIStatus(self):
-        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
-        with self.console.status("[bold green] Processing request...[/]") as _:
-            connection.request('GET', "status", None)
-            response = connection.getresponse()
-            showResponse(self.console, response.read().decode(), response.status)
-
-
     def getInputDefinitions(self):
-        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
+        self.console.print("baseURL: " + self.hmsBaseUrl)
+        connection = http.client.HTTPConnection(self.hmsBaseUrl)
         headers = { 'X-API-Key': self.hawqsAPIKey }
         with self.console.status("[bold green] Processing request...[/]") as _:
-            connection.request('GET', "project/inputs", None, headers)
+            connection.request('GET', "/hms/rest/api/hawqs/project/inputs", None, headers)
             response = connection.getresponse()
             showResponse(self.console, response.read().decode(), response.status)
 
@@ -120,10 +110,10 @@ class HMSTests:
         self.currentJobID = None
         self.currentStatus = None
 
-        connection = http.client.HTTPSConnection(self.hmsBaseUrl)
+        connection = http.client.HTTPConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey, 'Content-type': 'application/json' }
-            connection.request('POST', "project/submit", json.dumps(project.inputData), headers)
+            connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(project.inputData), headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
             showResponse(self.console, currentProject, response.status)
@@ -136,7 +126,7 @@ class HMSTests:
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "project/status/" + self.currentJobID, None, headers)
+            connection.request('GET', "/hms/rest/api/hawqs/project/status/" + self.currentJobID, None, headers)
             response = connection.getresponse()
             currentStatus = response.read().decode()
             showResponse(self.console, currentStatus, response.status)
@@ -149,7 +139,7 @@ class HMSTests:
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
             headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "project/data/" + self.currentJobID + "?process=" + process, None, headers)
+            connection.request('GET', "/hms/rest/api/hawqs/project/data/" + self.currentJobID + "?process=" + process, None, headers)
             response = connection.getresponse()
             currentProject = response.read().decode()
             showResponse(self.console, currentProject, response.status)
