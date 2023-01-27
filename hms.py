@@ -86,19 +86,20 @@ class HMSTests:
         if (self.currentJobID):
             self.getProjectStatus()
         else:
-            alert("No Project ID Stored")
+            alert(self.console, "No Project ID Stored")
 
     def data(self):
         self.console.print(Panel("[green]Get Project Data"))
         if (self.currentProjectCompleted):
             self.getProjectData()
         else:
-            alert("No Completed Project")
+            alert(self.console, "No Completed Project")
 
     def getInputDefinitions(self):
         self.console.print("baseURL: " + self.hmsBaseUrl)
+        self.console.print("apiKey: " + self.hawqsAPIKey)
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey }
+        headers = { 'Authorization': self.hawqsAPIKey }
         with self.console.status("[bold green] Processing request...[/]") as _:
             connection.request('GET', "/hms/rest/api/hawqs/project/inputs", None, headers)
             response = connection.getresponse()
@@ -110,17 +111,23 @@ class HMSTests:
         self.currentJobID = None
         self.currentStatus = None
 
+        hawqsSubmitObject = {
+            "hawqsApiKey": self.hawqsAPIKey,
+            "hawqsInputData": project.inputData
+        }
+
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
-            headers = { 'X-API-Key': self.hawqsAPIKey, 'Content-type': 'application/json' }
-            connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(project.inputData), headers)
+            headers = { 'Content-type': 'application/json' }
+            connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(hawqsSubmitObject), headers)
             response = connection.getresponse()
-            currentProject = response.read().decode()
-            showResponse(self.console, currentProject, response.status)
+            self.console.print("submit: ", response.read())
+            # currentProject = response.read().decode()
+            # showResponse(self.console, currentProject, response.status)
 
-            self.currentProject = json.loads(currentProject)
-            if self.currentProject['id']:
-                self.currentJobID = self.currentProject['id']
+            # self.currentProject = json.loads(currentProject)
+            # if self.currentProject['id']:
+            #     self.currentJobID = self.currentProject['id']
 
     def getProjectStatus(self):
         connection = http.client.HTTPSConnection(self.hmsBaseUrl)
