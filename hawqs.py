@@ -50,7 +50,8 @@ class HAWQSTests:
                 { 'selector': "2", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "HAWQS/projects/submit" },
                 { 'selector': "3", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "HAWQS/projects/:id" },
                 { 'selector': "4", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "HAWQS/api-files/api-projects/epaDevAccess/" },
-                { 'selector': "5", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
+                { 'selector': "5", 'action': "Previous Project Status", 'type': "", 'endpoint': "" },
+                { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
                 { 'selector': "e", 'action': "[red]Back to Main Menu", 'type': None, 'endpoint': None },
             ]
         }
@@ -81,7 +82,7 @@ class HAWQSTests:
         if choice == "3":
             if self.isCurrentJob():
                 self.console.print("[green] Fetching Project Status")
-                self.getProjectStatus()
+                self.getProjectStatus(self.currentJobID)
             else:
                 alert(self.console, "[red] There must be a stored job ID. Submit the test project to create job ID")
                 self.showHAWQSMenu()
@@ -93,6 +94,9 @@ class HAWQSTests:
                 alert(self.console, "[red] Project progress must be 100% complete to get data. Check status again")
                 self.showHAWQSMenu()
         if choice == "5":
+            self.console.print("[green] Fetch Previous Project Status")
+            self.getProjectStatus(Prompt.ask("Enter Project Id >"))
+        if choice == "6":
             self.console.print("[green] Fetch Previous Project Data")
             self.showFileHistory()
         if choice == "e":
@@ -138,21 +142,22 @@ class HAWQSTests:
         if self.currentJobID:
             return True
 
-    def getProjectStatus(self):
+    def getProjectStatus(self, projectId):
         try:
             connection = http.client.HTTPSConnection(self.hawqsAPIUrl)
             headers = { 'X-API-Key': self.hawqsAPIKey }
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', f'/projects/{self.currentJobID}', None, headers)
+                connection.request('GET', f'/projects/{projectId}', None, headers)
                 response = connection.getresponse()
                 currentStatus = response.read().decode()
                 showResponse(self.console, currentStatus, response.status)
 
-                self.currentStatus = json.loads(self.currentStatus)
-                if self.currentStatus and not self.currentProjectCompleted:
-                    if self.currentStatus['status']['progress'] >= 100:
-                        self.currentProjectCompleted = True
-                        self.updateHistory()
+                if self.currentJobID and self.currentJobId == projectId:
+                    self.currentStatus = json.loads(currentStatus)
+                    if self.currentStatus and not self.currentProjectCompleted:
+                        if self.currentStatus['status']['progress'] >= 100:
+                            self.currentProjectCompleted = True
+                            self.updateHistory()
 
         except Exception as e:
             self.console.print(Panel("some kind of exception occurred", e))
