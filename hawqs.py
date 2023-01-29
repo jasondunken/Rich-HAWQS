@@ -95,7 +95,7 @@ class HAWQSTests:
                 self.showHAWQSMenu()
         if choice == "5":
             self.console.print("[green] Fetch Previous Project Status")
-            self.getProjectStatus(Prompt.ask("Enter Project Id >"))
+            self.getProjectStatus(Prompt.ask(" Enter Project Id >"))
         if choice == "6":
             self.console.print("[green] Fetch Previous Project Data")
             self.showFileHistory()
