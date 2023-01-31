@@ -123,8 +123,7 @@ class HMSTests:
         self.currentStatus = None
 
         hawqsSubmitObject = {
-            "hawqsApiKey": self.hawqsAPIKey,
-            "hawqsInputData": project.inputData
+            "inputData": project.inputData
         }
 
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
