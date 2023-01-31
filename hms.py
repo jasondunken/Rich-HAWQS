@@ -128,7 +128,7 @@ class HMSTests:
 
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
         with self.console.status("[bold green] Processing request...[/]") as _:
-            headers = { 'Content-type': 'application/json' }
+            headers = { 'X-API-Key': self.hawqsAPIKey , 'Content-type': 'application/json' }
             connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(hawqsSubmitObject), headers)
             response = connection.getresponse()
             self.console.print("submit: ", response.read())
