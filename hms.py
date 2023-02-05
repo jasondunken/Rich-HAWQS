@@ -93,8 +93,10 @@ class HMSTests:
 
     def data(self):
         self.console.print(Panel("[green]Get Project Data"))
+        processChoices = ["y", "n"]
         if (self.currentProjectCompleted):
-            self.getProjectData()
+            processChoice = Prompt.ask(" Perform HMS/Aquatox data processing (y/n)? ", choices=processChoices, show_choices=False)
+            self.getProjectData(processChoice == "y" and True or False) 
         else:
             alert(self.console, "No Completed Project")
 
