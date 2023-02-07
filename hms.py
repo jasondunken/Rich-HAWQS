@@ -148,7 +148,7 @@ class HMSTests:
                     currentProject = response.read().decode()
                     showResponse(self.console, currentProject, response.status)
                     self.currentProject = json.loads(currentProject)
-                    if self.currentProject['id']:
+                    if "id" in self.currentProject.keys():
                         self.currentJobID = self.currentProject['id']
                 else:
                     alert(self.console, "Request unsuccessful")
@@ -167,7 +167,7 @@ class HMSTests:
                     showResponse(self.console, currentStatus, response.status)
                     if self.currentJobID and self.currentJobId == projectId:
                         self.currentStatus = json.loads(currentStatus)
-                        if self.currentStatus['id']:
+                        if "id" in self.currentProject.keys():
                             self.currentJobID = self.currentProject['id']
                 else:
                     alert(self.console, "Request unsuccessful")
@@ -186,7 +186,7 @@ class HMSTests:
                     showResponse(self.console, currentProject, response.status)
 
                     self.currentProject = json.loads(currentProject)
-                    if self.currentProject['id']:
+                    if "id" in self.currentProject.keys():
                         self.currentJobID = self.currentProject['id']
                 else:
                     alert(self.console, "Request unsuccessful")
