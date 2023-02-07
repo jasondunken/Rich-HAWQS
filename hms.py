@@ -39,7 +39,7 @@ class HMSTests:
                 { 'selector': "1", 'action': "HMS/HAWQS project setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
                 { 'selector': "2", 'action': "HMS/HAWQS submit project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
                 { 'selector': "3", 'action': "HMS/HAWQS project status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
-                { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id" },
+                { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id?process=(True/False)" },
                 { 'selector': "5", 'action': "Previous Project Status", 'type': "", 'endpoint': "" },
                 { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
                 { 'selector': "e", 'action': "[red]Back to Main Menu", 'type': None, 'endpoint': None },
