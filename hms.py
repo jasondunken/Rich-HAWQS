@@ -36,9 +36,10 @@ class HMSTests:
             ],
             'rows': [
                 # { 'selector': "0", 'action': "HMS/HAWQS API Status", 'type': "GET", 'endpoint': "HMS/hawqs/status" },
-                { 'selector': "1", 'action': "HMS/HAWQS project setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
-                { 'selector': "2", 'action': "HMS/HAWQS submit project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
-                { 'selector': "3", 'action': "HMS/HAWQS project status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
+                { 'selector': "1", 'action': "HMS/HAWQS Project Setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
+                { 'selector': "2", 'action': "HMS/HAWQS Submit Project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
+                { 'selector': "3", 'action': "HMS/HAWQS Project Status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
+                { 'selector': "x", 'action': "Cancel Project Execution", 'type': "GET", 'endpoint': "HMS/hawqs/project/cancel/:id" },
                 { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id?process=(True/False)" },
                 { 'selector': "5", 'action': "Previous Project Status", 'type': "", 'endpoint': "" },
                 { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
@@ -65,6 +66,8 @@ class HMSTests:
             self.submit()
         if choice == "3":
             self.status()
+        if choice == "x":
+            self.cancel()
         if choice == "4":
             self.data()
         if choice == "5":
@@ -107,16 +110,23 @@ class HMSTests:
     def history(self):
         self.getHistory()
 
+    def cancel(self):
+        self.console.print(Panel("[green]Cancel Project Execution"))
+        self.cancelProjectExecution(Prompt.ask(" Enter id of project to cancel: "))
 
     def getInputDefinitions(self):
-        self.console.print("baseURL: " + self.hmsBaseUrl)
-        self.console.print("apiKey: " + self.hawqsAPIKey)
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
         headers = { 'X-API-Key': self.hawqsAPIKey }
-        with self.console.status("[bold green] Processing request...[/]") as _:
-            connection.request('GET', "/hms/rest/api/hawqs/project/inputs", None, headers)
-            response = connection.getresponse()
-            showResponse(self.console, response.read().decode(), response.status)
+        try:
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('GET', "/hms/rest/api/hawqs/project/inputs", None, headers)
+                response = connection.getresponse()
+                if response.status == 200:
+                    showResponse(self.console, response.read().decode(), response.status)
+                else:
+                    alert(self.console, "Request unsuccessful")
+        except Exception as ex:
+            alert(self.console, "Error! " + repr(ex))
 
     def submitProject(self):
         self.currentProject = None
@@ -129,45 +139,73 @@ class HMSTests:
         }
 
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        with self.console.status("[bold green] Processing request...[/]") as _:
-            headers = { 'X-API-Key': self.hawqsAPIKey , 'Content-type': 'application/json' }
-            connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(hawqsSubmitObject), headers)
-            response = connection.getresponse()
-            self.console.print("submit: ", response.read())
-            # currentProject = response.read().decode()
-            # showResponse(self.console, currentProject, response.status)
-
-            # self.currentProject = json.loads(currentProject)
-            # if self.currentProject['id']:
-            #     self.currentJobID = self.currentProject['id']
+        headers = { 'X-API-Key': self.hawqsAPIKey , 'Content-type': 'application/json' }
+        try:
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(hawqsSubmitObject), headers)
+                response = connection.getresponse()
+                if response.status == 200:
+                    currentProject = response.read().decode()
+                    showResponse(self.console, currentProject, response.status)
+                    self.currentProject = json.loads(currentProject)
+                    if self.currentProject['id']:
+                        self.currentJobID = self.currentProject['id']
+                else:
+                    alert(self.console, "Request unsuccessful")
+        except Exception as ex:
+            alert(self.console, "Error! " + repr(ex))
 
     def getProjectStatus(self, projectId):
-        self.console.print("baseURL: " + self.hmsBaseUrl)
-        self.console.print("apiKey: " + self.hawqsAPIKey)
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        with self.console.status("[bold green] Processing request...[/]") as _:
-            headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "/hms/rest/api/hawqs/project/status/" + projectId, None, headers)
-            response = connection.getresponse()
-            currentStatus = response.read().decode()
-            showResponse(self.console, currentStatus, response.status)
-            if self.currentJobID and self.currentJobId == projectId:
-                self.currentStatus = json.loads(currentStatus)
-                if self.currentStatus['id']:
-                    self.currentJobID = self.currentProject['id']
+        headers = { 'X-API-Key': self.hawqsAPIKey }
+        try:
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('GET', "/hms/rest/api/hawqs/project/status/" + projectId, None, headers)
+                response = connection.getresponse()
+                if response.status == 200:
+                    currentStatus = response.read().decode()
+                    showResponse(self.console, currentStatus, response.status)
+                    if self.currentJobID and self.currentJobId == projectId:
+                        self.currentStatus = json.loads(currentStatus)
+                        if self.currentStatus['id']:
+                            self.currentJobID = self.currentProject['id']
+                else:
+                    alert(self.console, "Request unsuccessful")
+        except Exception as ex:
+            alert(self.console, "Error! " + repr(ex))
     
     def getProjectData(self, process):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        with self.console.status("[bold green] Processing request...[/]") as _:
-            headers = { 'X-API-Key': self.hawqsAPIKey }
-            connection.request('GET', "/hms/rest/api/hawqs/project/data/" + self.currentJobID + "?process=" + process, None, headers)
-            response = connection.getresponse()
-            currentProject = response.read().decode()
-            showResponse(self.console, currentProject, response.status)
+        headers = { 'X-API-Key': self.hawqsAPIKey }
+        try:
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('GET', "/hms/rest/api/hawqs/project/data/" + self.currentJobID + "?process=" + process, None, headers)
+                response = connection.getresponse()
+                if response.status == 200:
+                    currentProject = response.read().decode()
+                    showResponse(self.console, currentProject, response.status)
 
-            self.currentProject = json.loads(currentProject)
-            if self.currentProject['id']:
-                self.currentJobID = self.currentProject['id']
+                    self.currentProject = json.loads(currentProject)
+                    if self.currentProject['id']:
+                        self.currentJobID = self.currentProject['id']
+                else:
+                    alert(self.console, "Request unsuccessful")
+        except Exception as ex:
+            alert(self.console, "Error! " + repr(ex))
+
+    def cancelProjectExecution(self, projectId):
+        connection = http.client.HTTPConnection(self.hmsBaseUrl)
+        headers = { 'X-API-Key': self.hawqsAPIKey }
+        try:
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('GET', "/hms/rest/api/hawqs/project/cancel/" + projectId, None, headers)
+                response = connection.getresponse()
+                if response.status == 200:
+                    showResponse(self.console, response.decode(), response.status)
+                else:
+                    alert(self.console, "Request unsuccessful")
+        except Exception as ex:
+            alert(self.console, "Error! " + repr(ex))
 
     def getHistory(self):
         alert(self.console, "hms test project history not yet implemented!")
