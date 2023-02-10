@@ -26,6 +26,9 @@ class HMSTests:
         self.currentStatus = None
 
     def showHMSMenu(self):
+        if self.currentJobID:
+            self.console.print(f"[green italic]Current HMS/HAWQS Job ID:[/] [red]{self.currentJobID}[/]", justify="center")
+
         table = Table(box=None)
         tableMetadata = {
             'columns': [
@@ -160,7 +163,7 @@ class HMSTests:
         headers = { 'X-API-Key': self.hawqsAPIKey }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', "/hms/rest/api/hawqs/project/status/" + projectId, None, headers)
+                connection.request('GET', f"/hms/rest/api/hawqs/project/status/{projectId}", None, headers)
                 response = connection.getresponse()
                 if response.status == 200:
                     currentStatus = response.read().decode()
