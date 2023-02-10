@@ -165,7 +165,7 @@ class HMSTests:
                 if response.status == 200:
                     currentStatus = response.read().decode()
                     showResponse(self.console, currentStatus, response.status)
-                    if self.currentJobID and self.currentJobId == projectId:
+                    if self.currentJobID and self.currentJobID == projectId:
                         self.currentStatus = json.loads(currentStatus)
                         if "id" in self.currentProject.keys():
                             self.currentJobID = self.currentProject['id']
