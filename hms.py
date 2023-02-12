@@ -17,6 +17,10 @@ class HMSTests:
         load_dotenv()
         self.hmsBaseUrl = os.getenv("DEV_HMS_HAWQS_BASE_URL")
         self.hawqsAPIKey = os.getenv("DEFAULT_API_KEY")
+        
+        self.dataDownloadPath = os.getenv("DATA_DOWNLOAD_PATH")
+        self.historyFilePath = os.getenv('HISTORY_FILE_PATH')
+        self.historyFileName = "hms-data-file-history.hst"
 
         self.console = console
         
@@ -170,12 +174,26 @@ class HMSTests:
                     showResponse(self.console, currentStatus, response.status)
                     if self.currentJobID and self.currentJobID == projectId:
                         self.currentStatus = json.loads(currentStatus)
-                        if "id" in self.currentProject.keys():
-                            self.currentJobID = self.currentProject['id']
+                        if self.currentStatus and not self.currentProjectCompleted:
+                            if self.currentStatus['status']['progress'] >= 100:
+                                self.currentProjectCompleted = True
+                                self.updateHistory()
                 else:
                     alert(self.console, "Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
+
+    def updateHistory(self):
+        with open(os.path.join(self.historyFilePath, self.historyFileName), 'a+') as historyFile:
+            for file in self.currentStatus['output']:
+                historyFile.write(f"{file['url']}\n")
+
+    def clearHistory(self):
+        try:
+            with open(os.path.join(self.historyFilePath, self.historyFileName), "w") as historyFile:
+                historyFile.write("")
+        except Exception as ex:
+            alert(self.console, "History already cleared")
     
     def getProjectData(self, process):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
@@ -211,7 +229,55 @@ class HMSTests:
             alert(self.console, "Error! " + repr(ex))
 
     def getHistory(self):
-        alert(self.console, "hms test project history not yet implemented!")
+        urls = None
+        try:
+            with open(os.path.join(self.historyFilePath, self.historyFileName), "r") as file:
+                urls = file.readlines()
+        
+        except Exception as ex:
+            alert(self.console, "There is currently no project history")
+            return
+
+        tableMetadata = {
+            'columns': [
+                { 'header': "", 'justify': "right", 'style': "yellow", 'width': 7 },
+                { 'header': "Project", 'justify': None, 'style': "green", 'width': None },
+                { 'header': "File", 'justify': None, 'style': "cyan", 'width': None },
+            ],
+            'rows': []
+        }
+        choices = []
+        for x, url in enumerate(urls):
+            project, name, url = self.parseUrl(url)
+
+            
+            tableMetadata['rows'].append({ 
+                "selector": x,
+                "project": project,
+                "name": name,
+                "url": url })
+            choices.append(str(x))
+        tableMetadata['rows'].append({ 'selector': 'c', 'project': "[blue]Clear history", 'name': "" })
+        choices.append("c")
+        tableMetadata['rows'].append({ 'selector': 'e', 'project': "[red]Exit to Main Menu", 'name': "" })
+        choices.append("e")
+
+        table = Table(box=None)
+        for column in tableMetadata['columns']:
+            table.add_column(column['header'], justify=column['justify'], style=column['style'], width=column['width'])
+        for row in tableMetadata['rows']:
+            table.add_row(f"<{row['selector']}>", row['project'], row['name'])
+
+        while True:
+            self.console.print(table, justify="center")
+            fileChoice = Prompt.ask(" Download file >", choices=choices, show_choices=False)
+
+            if fileChoice == "e": break
+            if fileChoice == "c": self.clearHistory()
+            else :
+                fileData = tableMetadata['rows'][int(fileChoice)]
+                self.console.print(Panel(f"Fetching {fileData['name']}..."))
+                self.getDataFile(fileData)
 
     def setKey(self, newKey):
         self.hawqsAPIKey = newKey

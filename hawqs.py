@@ -23,7 +23,7 @@ class HAWQSTests:
         
         self.dataDownloadPath = os.getenv("DATA_DOWNLOAD_PATH")
         self.historyFilePath = os.getenv('HISTORY_FILE_PATH')
-        self.historyFileName = "data-file-history.hst"
+        self.historyFileName = "hawqs-data-file-history.hst"
         
         self.currentProject = None
         self.currentProjectCompleted = False
