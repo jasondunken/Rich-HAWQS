@@ -123,10 +123,9 @@ class HMSTests:
 
     def getInputDefinitions(self):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', "/hms/rest/api/hawqs/project/inputs", None, headers)
+                connection.request('GET', "/hms/rest/api/hawqs/project/inputs")
                 response = connection.getresponse()
                 if response.status == 200:
                     showResponse(self.console, response.read().decode(), response.status)
