@@ -141,11 +141,12 @@ class HMSTests:
         self.currentStatus = None
 
         hawqsSubmitObject = {
+            'X-API-Key': self.hawqsAPIKey , 
             "inputData": project.inputData
         }
 
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey , 'Content-type': 'application/json' }
+        headers = { 'Content-type': 'application/json' }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
                 connection.request('POST', "/hms/rest/api/hawqs/project/submit", json.dumps(hawqsSubmitObject), headers)
@@ -163,10 +164,14 @@ class HMSTests:
 
     def getProjectStatus(self, projectId):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey }
+        headers = { 'Content-type': 'application/json' }
+
+        hawqsSubmitObject = {
+            'X-API-Key': self.hawqsAPIKey
+        }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', f"/hms/rest/api/hawqs/project/status/{projectId}", None, headers)
+                connection.request('POST', f"/hms/rest/api/hawqs/project/status/{projectId}", json.dumps(hawqsSubmitObject), headers)
                 response = connection.getresponse()
                 if response.status == 200:
                     currentStatus = response.read().decode()
@@ -196,10 +201,15 @@ class HMSTests:
     
     def getProjectData(self, process):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey }
+        headers = { 'Content-type': 'application/json' }
+
+        hawqsSubmitObject = {
+            'X-API-Key': self.hawqsAPIKey,
+            "process": process
+        }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', "/hms/rest/api/hawqs/project/data/" + self.currentJobID + "?process=" + process, None, headers)
+                connection.request('POST', f"/hms/rest/api/hawqs/project/data/{self.currentJobID}", json.dumps(hawqsSubmitObject), headers)
                 response = connection.getresponse()
                 if response.status == 200:
                     currentProject = response.read().decode()
@@ -215,10 +225,14 @@ class HMSTests:
 
     def cancelProjectExecution(self, projectId):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
-        headers = { 'X-API-Key': self.hawqsAPIKey }
+        headers = { 'Content-type': 'application/json' }
+
+        hawqsSubmitObject = {
+            'X-API-Key': self.hawqsAPIKey
+        }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('GET', "/hms/rest/api/hawqs/project/cancel/" + projectId, None, headers)
+                connection.request('POST', f"/hms/rest/api/hawqs/project/cancel/{projectId}", json.dumps(hawqsSubmitObject), headers)
                 response = connection.getresponse()
                 if response.status == 200:
                     showResponse(self.console, response.decode(), response.status)
