@@ -130,7 +130,7 @@ class HMSTests:
                 if response.status == 200:
                     showResponse(self.console, response.read().decode(), response.status)
                 else:
-                    alert(self.console, "Request unsuccessful")
+                    alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
@@ -142,7 +142,7 @@ class HMSTests:
 
         hawqsAPIObj = {
             'apiKey': self.hawqsAPIKey , 
-            "inputData": project.inputData
+            "inputData": json.dumps(project.inputData)
         }
 
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
@@ -158,7 +158,7 @@ class HMSTests:
                     if "id" in self.currentProject.keys():
                         self.currentJobID = self.currentProject['id']
                 else:
-                    alert(self.console, "Request unsuccessful")
+                    alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
@@ -183,7 +183,7 @@ class HMSTests:
                                 self.currentProjectCompleted = True
                                 self.updateHistory()
                 else:
-                    alert(self.console, "Request unsuccessful")
+                    alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
@@ -219,7 +219,7 @@ class HMSTests:
                     if "id" in self.currentProject.keys():
                         self.currentJobID = self.currentProject['id']
                 else:
-                    alert(self.console, "Request unsuccessful")
+                    alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
@@ -237,7 +237,7 @@ class HMSTests:
                 if response.status == 200:
                     showResponse(self.console, response.decode(), response.status)
                 else:
-                    alert(self.console, "Request unsuccessful")
+                    alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
