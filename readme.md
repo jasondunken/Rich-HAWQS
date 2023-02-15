@@ -6,6 +6,10 @@
 
 A Python CLI application for testing the HMS/HAWQS APIs. With minor changes it could be used to submit and retrieve arbitrary HAWQS projects. For now a static test case for sub-basin 07100009, using the [PRISM](https://prism.oregonstate.edu/) weather dataset and having a time span of 1981-01-01 to 1985-12-31 is used.
 
+-   tests for directly accessing the Hawqs API
+-   tests for accessing the HAWQS API through HMS
+-   project data file history
+
 To use this application you need to provide an env file with the current url for the HAWQS API, your HAWQS API key, and some other stuff.
 
 pip and Anaconda environment files are provided.
