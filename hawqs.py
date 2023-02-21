@@ -49,6 +49,7 @@ class HAWQSTests:
                 { 'selector': "1", 'action': "Get Input Definitions", 'type': "GET", 'endpoint': "HAWQS/projects/input-definitions" },
                 { 'selector': "2", 'action': "Submit a Test Project", 'type': "POST", 'endpoint': "HAWQS/projects/submit" },
                 { 'selector': "3", 'action': "Check Project Execution Status", 'type': "GET", 'endpoint': "HAWQS/projects/:id" },
+                { 'selector': "c", 'action': "Cancel Project Execution", 'type': "GET", 'endpoint': "HAWQS/projects/cancel/:id" },
                 { 'selector': "4", 'action': "Get Current Project Data", 'type': "GET", 'endpoint': "HAWQS/api-files/api-projects/epaDevAccess/" },
                 { 'selector': "5", 'action': "Previous Project Status", 'type': "", 'endpoint': "" },
                 { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
@@ -86,6 +87,13 @@ class HAWQSTests:
             else:
                 alert(self.console, "[red] There must be a stored job ID. Submit the test project to create job ID")
                 self.showHAWQSMenu()
+        if choice == "c":
+            if self.isCurrentJob() and not self.currentProjectCompleted:
+                self.cancelExecution()
+            elif self.isCurrentJob() and self.currentProjectCompleted:
+                alert(self.console, "[red] The current project execution has completed")
+            elif not self.isCurrentJob():
+                alert(self.console, "There is no current job id stored")
         if choice == "4":
             if self.currentProjectCompleted:
                 self.console.print("[green] Fetch Project Data")
@@ -158,6 +166,21 @@ class HAWQSTests:
                         if self.currentStatus['status']['progress'] >= 100:
                             self.currentProjectCompleted = True
                             self.updateHistory()
+
+        except Exception as e:
+            self.console.print(Panel("some kind of exception occurred", e))
+
+    def cancelExecution(self):
+        try:
+            connection = http.client.HTTPSConnection(self.hawqsAPIUrl)
+            headers = { 'X-API-Key': self.hawqsAPIKey }
+            with self.console.status("[bold green] Processing request...[/]") as _:
+                connection.request('PATCH', f'/projects/cancel/{self.currentJobID}', None, headers)
+                response = connection.getresponse()
+                currentStatus = response.read().decode()
+                showResponse(self.console, currentStatus, response.status)
+
+                self.currentJobID = None
 
         except Exception as e:
             self.console.print(Panel("some kind of exception occurred", e))
