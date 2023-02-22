@@ -45,9 +45,9 @@ class HMSTests:
                 # { 'selector': "0", 'action': "HMS/HAWQS API Status", 'type': "GET", 'endpoint': "HMS/hawqs/status" },
                 { 'selector': "1", 'action': "HMS/HAWQS Project Setup", 'type': "GET", 'endpoint': "HMS/hawqs/project/inputs" },
                 { 'selector': "2", 'action': "HMS/HAWQS Submit Project", 'type': "POST", 'endpoint': "HMS/hawqs/project/submit" },
-                { 'selector': "3", 'action': "HMS/HAWQS Project Status", 'type': "GET", 'endpoint': "HMS/hawqs/project/status/:id" },
-                { 'selector': "x", 'action': "Cancel Project Execution", 'type': "GET", 'endpoint': "HMS/hawqs/project/cancel/:id" },
-                { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "GET", 'endpoint': "HMS/hawqs/project/data/:id?process=(True/False)" },
+                { 'selector': "3", 'action': "HMS/HAWQS Project Status", 'type': "POST", 'endpoint': "HMS/hawqs/project/status/:id" },
+                { 'selector': "c", 'action': "Cancel Project Execution", 'type': "POST", 'endpoint': "HMS/hawqs/project/cancel/:id" },
+                { 'selector': "4", 'action': "Get HMS/HAWQS Project Data", 'type': "POST", 'endpoint': "HMS/hawqs/project/data/:id?process=(True/False)" },
                 { 'selector': "5", 'action': "Previous Project Status", 'type': "", 'endpoint': "" },
                 { 'selector': "6", 'action': "Previous Project Data Files", 'type': "", 'endpoint': "" },
                 { 'selector': "e", 'action': "[red]Back to Main Menu", 'type': None, 'endpoint': None },
@@ -73,7 +73,7 @@ class HMSTests:
             self.submit()
         if choice == "3":
             self.status()
-        if choice == "x":
+        if choice == "c":
             self.cancel()
         if choice == "4":
             self.data()
@@ -119,7 +119,12 @@ class HMSTests:
 
     def cancel(self):
         self.console.print(Panel("[green]Cancel Project Execution"))
-        self.cancelProjectExecution(Prompt.ask(" Enter id of project to cancel: "))
+        if self.isCurrentJob() and not self.currentProjectCompleted:
+            self.cancelProjectExecution()
+        elif self.isCurrentJob() and self.currentProjectCompleted:
+            alert(self.console, "[red] The current project execution has completed")
+        elif not self.isCurrentJob():
+            alert(self.console, "There is no current job id stored")
 
     def getInputDefinitions(self):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
@@ -223,7 +228,7 @@ class HMSTests:
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
 
-    def cancelProjectExecution(self, projectId):
+    def cancelProjectExecution(self):
         connection = http.client.HTTPConnection(self.hmsBaseUrl)
         headers = { 'Content-type': 'application/json' }
 
@@ -232,7 +237,7 @@ class HMSTests:
         }
         try:
             with self.console.status("[bold green] Processing request...[/]") as _:
-                connection.request('POST', f"/hms/rest/api/hawqs/project/cancel/{projectId}", json.dumps(hawqsAPIObj), headers)
+                connection.request('POST', f"/hms/rest/api/hawqs/project/cancel/{self.currentJobID}", json.dumps(hawqsAPIObj), headers)
                 response = connection.getresponse()
                 if response.status == 200:
                     showResponse(self.console, response.decode(), response.status)
@@ -240,6 +245,10 @@ class HMSTests:
                     alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
             alert(self.console, "Error! " + repr(ex))
+
+    def isCurrentJob(self):
+        if self.currentJobID:
+            return True
 
     def getHistory(self):
         urls = None
