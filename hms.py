@@ -240,7 +240,9 @@ class HMSTests:
                 connection.request('POST', f"/hms/rest/api/hawqs/project/cancel/{self.currentJobID}", json.dumps(hawqsAPIObj), headers)
                 response = connection.getresponse()
                 if response.status == 200:
-                    showResponse(self.console, response.decode(), response.status)
+                    message = {"message": "this endpoint returns an empty body"}
+                    message = json.dumps(message)
+                    showResponse(self.console, message, response.status)
                 else:
                     alert(self.console, f"{response.status} Request unsuccessful")
         except Exception as ex:
